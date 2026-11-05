@@ -9,8 +9,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Step 2: Download NLTK datasets for email NLP cleaning
 RUN python -m nltk.downloader stopwords punkt punkt_tab
 
-# Step 3: Copy backend source code and models
-COPY . .
+# Step 3: Copy only necessary backend code and ML models
+COPY server.py .
+COPY src/ ./src/
+COPY models/ ./models/
 
 # Step 4: Expose FastAPI port and start server
 EXPOSE 8000
