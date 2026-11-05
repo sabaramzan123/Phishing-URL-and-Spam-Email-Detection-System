@@ -14,7 +14,7 @@ venv/
 tests/
 *.log
 frontend/
-data/*.csv
-.DS_Store
+data/
+.venv/
 Thumbs.db
 
