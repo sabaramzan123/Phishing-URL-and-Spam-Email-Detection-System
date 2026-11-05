@@ -10,3 +10,4 @@ export async function GET() {
     platform: "Vercel Edge & Serverless Intelligence Engine"
   });
 }
+
