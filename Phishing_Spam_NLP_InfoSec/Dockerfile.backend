@@ -1,72 +1,17 @@
-# ==============================================================================
-# Multi-Stage Hardened Dockerfile for PhishGuard FastAPI Threat Intelligence API
-# Base: Debian-slim Python 3.11 for minimal footprint and low CVE exposure
-# ==============================================================================
-
-# ------------------------------------------------------------------------------
-# Stage 1: Build Dependencies (Builder)
-# ------------------------------------------------------------------------------
-FROM python:3.11-slim AS builder
-
-WORKDIR /build
-
-# Install minimal build essentials for compiling any native wheels
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install python dependencies in isolated virtual environment
-COPY requirements.txt .
-RUN python -m venv /opt/venv && \
-    /opt/venv/bin/pip install --no-cache-dir --upgrade pip && \
-    /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
-
-# Pre-download required NLTK corpora (punkt, stopwords) into air-gapped directory
-RUN /opt/venv/bin/python -c "import nltk; nltk.download('stopwords', download_dir='/opt/nltk_data'); nltk.download('punkt', download_dir='/opt/nltk_data'); nltk.download('punkt_tab', download_dir='/opt/nltk_data')"
-
-# ------------------------------------------------------------------------------
-# Stage 2: Final Production Runner (Hardened & Non-Root)
-# ------------------------------------------------------------------------------
-FROM python:3.11-slim AS runner
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install curl for container HEALTHCHECK
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Step 1: Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Security: Create dedicated non-root user and group (Least Privilege Principle)
-RUN groupadd -r appgroup && useradd -r -g appgroup -u 10001 -s /sbin/nologin -d /app appuser
+# Step 2: Download NLTK datasets for email NLP cleaning
+RUN python -m nltk.downloader stopwords punkt punkt_tab
 
-# Copy virtual environment and pre-downloaded NLTK data from builder stage
-COPY --from=builder /opt/venv /opt/venv
-COPY --from=builder /opt/nltk_data /usr/share/nltk_data
+# Step 3: Copy backend source code and models
+COPY . .
 
-# Ensure virtualenv is in PATH
-ENV PATH="/opt/venv/bin:$PATH" \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    NLTK_DATA=/usr/share/nltk_data
-
-# Copy application source code and ML model artifacts
-COPY server.py ./
-COPY src/ ./src/
-COPY models/ ./models/
-
-# Set ownership of application directory to appuser
-RUN chown -R appuser:appgroup /app
-
-# Switch to non-root user
-USER appuser
-
-# Expose FastAPI default port
+# Step 4: Expose FastAPI port and start server
 EXPOSE 8000
-
-# Container Healthcheck (Evaluates live API response every 30s)
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8000/api/status || exit 1
-
-# Start FastAPI via Uvicorn
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
-
