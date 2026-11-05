@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   async rewrites() {
     // If an external backend URL is explicitly configured, proxy requests to it
     if (process.env.BACKEND_API_URL) {
