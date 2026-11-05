@@ -27,3 +27,4 @@ output "api_routing_rule_arn" {
   description = "ARN of the API routing listener rule"
   value       = aws_lb_listener_rule.api_routing.arn
 }
+

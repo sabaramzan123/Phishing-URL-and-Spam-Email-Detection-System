@@ -63,3 +63,4 @@ variable "enable_fargate_spot" {
   type        = bool
   default     = true
 }
+

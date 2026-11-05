@@ -17,3 +17,4 @@ output "public_subnet_2_id" {
   description = "ID of public subnet 2"
   value       = aws_subnet.public_2.id
 }
+

@@ -17,3 +17,4 @@ output "frontend_service_name" {
   description = "The name of the frontend ECS service"
   value       = aws_ecs_service.frontend.name
 }
+

@@ -94,3 +94,4 @@ module "ecs" {
   frontend_target_group_arn   = module.alb.frontend_target_group_arn
   enable_fargate_spot         = var.enable_fargate_spot
 }
+

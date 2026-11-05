@@ -22,3 +22,4 @@ output "ecs_cluster_name" {
   description = "Name of the Amazon ECS Fargate cluster"
   value       = module.ecs.cluster_name
 }
+

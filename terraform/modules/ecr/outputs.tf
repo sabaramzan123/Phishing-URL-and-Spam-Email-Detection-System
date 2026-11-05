@@ -17,3 +17,4 @@ output "frontend_repository_arn" {
   description = "The ARN of the frontend ECR repository"
   value       = aws_ecr_repository.frontend.arn
 }
+

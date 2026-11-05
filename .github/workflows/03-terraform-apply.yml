@@ -1,17 +1,21 @@
-name: "03 - Terraform Deploy Infrastructure (AWS)"
+name: "03 - Terraform Deploy Infrastructure & Auto-Push ECR (AWS)"
 
 # ==============================================================================
-# Workflow 3: Automated Cloud Infrastructure Provisioning
+# Workflow 3: End-to-End Automated Cloud Deployment
 # ------------------------------------------------------------------------------
 # Triggers on:
-#   1. Manual execution via workflow_dispatch (Recommended for safety)
-#   2. Push to main branch when terraform/ directory changes
+#   1. Manual execution via workflow_dispatch (One-click deploy from GitHub)
+#   2. Push to main branch when terraform/ or application code changes
 #
-# Resources Provisioned:
-#   - AWS VPC with Multi-AZ Public Subnets, IGW, and Route Tables
-#   - AWS ECR Repositories (Backend & Frontend)
-#   - AWS Application Load Balancer (ALB) with Path-Based Routing
-#   - AWS ECS Fargate Cluster & Microservices
+# Execution Flow:
+#   Step 1: Authenticate to AWS via GitHub Secrets
+#   Step 2: Initialize Terraform with S3 remote backend and DynamoDB state lock
+#   Step 3: Provision ECR Repositories (if not already existing)
+#   Step 4: Authenticate Docker with Amazon ECR
+#   Step 5: Build & Push Backend and Frontend Docker images to Amazon ECR
+#   Step 6: Provision remaining infrastructure (VPC, ALB, ECS Fargate Spot)
+#   Step 7: Force zero-downtime rolling deployment on ECS tasks
+#   Step 8: Output public Application Load Balancer URL
 # ==============================================================================
 
 on:
@@ -20,20 +24,24 @@ on:
     branches: [ "main" ]
     paths:
       - "terraform/**"
+      - "Phishing_Spam_NLP_InfoSec/**"
       - ".github/workflows/03-terraform-apply.yml"
 
 jobs:
-  terraform-apply:
-    name: "Terraform Plan & Apply"
+  deploy:
+    name: "Build, Push ECR & Deploy Infrastructure"
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: terraform/environments/prod
 
     steps:
+      # ------------------------------------------------------------------------
+      # 1. Checkout Code
+      # ------------------------------------------------------------------------
       - name: "Checkout Source Code"
         uses: actions/checkout@v4
 
+      # ------------------------------------------------------------------------
+      # 2. Configure AWS Credentials
+      # ------------------------------------------------------------------------
       - name: "Configure AWS Credentials"
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -41,27 +49,101 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
 
+      # ------------------------------------------------------------------------
+      # 3. Setup Terraform
+      # ------------------------------------------------------------------------
       - name: "Setup Terraform CLI"
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.7.0"
 
+      # ------------------------------------------------------------------------
+      # 4. Terraform Init
+      # ------------------------------------------------------------------------
       - name: "Initialize Terraform with S3 Remote Backend"
+        working-directory: terraform/environments/prod
         run: terraform init
 
+      # ------------------------------------------------------------------------
+      # 5. Ensure ECR Repositories Exist First
+      # ------------------------------------------------------------------------
+      - name: "Provision ECR Repositories"
+        working-directory: terraform/environments/prod
+        run: |
+          echo "Targeting ECR module to ensure container registries exist before pushing images..."
+          terraform apply -target=module.ecr -auto-approve
+
+      # ------------------------------------------------------------------------
+      # 6. Log in to Amazon ECR
+      # ------------------------------------------------------------------------
+      - name: "Log in to Amazon ECR"
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # ------------------------------------------------------------------------
+      # 7. Build and Push Backend Docker Image
+      # ------------------------------------------------------------------------
+      - name: "Build & Push Backend Container to ECR"
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: "phishguard-backend"
+        run: |
+          echo "Building Backend Docker image..."
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest -f Phishing_Spam_NLP_InfoSec/Dockerfile.backend Phishing_Spam_NLP_InfoSec
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+
+          echo "Pushing Backend Docker image to Amazon ECR..."
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+
+      # ------------------------------------------------------------------------
+      # 8. Build and Push Frontend Docker Image
+      # ------------------------------------------------------------------------
+      - name: "Build & Push Frontend Container to ECR"
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: "phishguard-frontend"
+        run: |
+          echo "Building Frontend Docker image..."
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest -f Phishing_Spam_NLP_InfoSec/frontend/Dockerfile Phishing_Spam_NLP_InfoSec/frontend
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+
+          echo "Pushing Frontend Docker image to Amazon ECR..."
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+
+      # ------------------------------------------------------------------------
+      # 9. Terraform Plan & Apply Remaining Infrastructure
+      # ------------------------------------------------------------------------
       - name: "Terraform Plan (Preview Infrastructure Changes)"
+        working-directory: terraform/environments/prod
         run: terraform plan -out=tfplan
 
-      - name: "Terraform Apply (Provision AWS Infrastructure)"
+      - name: "Terraform Apply (Provision VPC, ALB, ECS & Fargate Spot)"
+        working-directory: terraform/environments/prod
         run: terraform apply -auto-approve tfplan
 
+      # ------------------------------------------------------------------------
+      # 10. Force ECS Rolling Deployment (Zero-Downtime)
+      # ------------------------------------------------------------------------
+      - name: "Force ECS Service Rolling Deployment"
+        run: |
+          echo "Triggering ECS Fargate zero-downtime rolling restart..."
+          aws ecs update-service --cluster phishguard-cluster --service phishguard-backend-service --force-new-deployment --region ${{ secrets.AWS_REGION || 'us-east-1' }} || true
+          aws ecs update-service --cluster phishguard-cluster --service phishguard-frontend-service --force-new-deployment --region ${{ secrets.AWS_REGION || 'us-east-1' }} || true
+
+      # ------------------------------------------------------------------------
+      # 11. Display Application URL in Summary
+      # ------------------------------------------------------------------------
       - name: "Display Application URL"
+        working-directory: terraform/environments/prod
         run: |
           ALB_URL=$(terraform output -raw alb_dns_name)
           echo "=========================================================="
-          echo "Infrastructure deployed successfully!"
+          echo "Infrastructure & Container deployment completed successfully!"
           echo "Application Load Balancer URL: http://$ALB_URL"
           echo "=========================================================="
-          echo "### 🚀 Deployment Successful!" >> $GITHUB_STEP_SUMMARY
-          echo "**Application URL:** [http://$ALB_URL](http://$ALB_URL)" >> $GITHUB_STEP_SUMMARY
-
+          echo "### 🚀 End-to-End Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECR Images:** Backend & Frontend pushed successfully (:latest and :${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
+          echo "- **Infrastructure:** VPC, ALB, Target Groups & ECS Fargate Spot online" >> $GITHUB_STEP_SUMMARY
+          echo "- **Live Application URL:** [http://$ALB_URL](http://$ALB_URL)" >> $GITHUB_STEP_SUMMARY

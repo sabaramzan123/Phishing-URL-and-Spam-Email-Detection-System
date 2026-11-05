@@ -163,3 +163,4 @@ resource "aws_ecs_service" "frontend" {
 
   depends_on = [aws_ecs_cluster_capacity_providers.main]
 }
+
