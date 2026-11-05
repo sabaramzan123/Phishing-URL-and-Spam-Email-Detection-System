@@ -11,6 +11,7 @@ RUN npm install
 
 # Step 2: Copy source code and build Next.js (standalone output)
 COPY . .
+RUN mkdir -p public
 RUN npm run build
 
 # ==============================================================================
