@@ -58,3 +58,4 @@ jobs:
           image-ref: "phishguard-backend:latest"
           format: "table"
           severity: "CRITICAL,HIGH"
+
