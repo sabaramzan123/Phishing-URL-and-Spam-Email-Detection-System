@@ -67,14 +67,30 @@ function checkTyposquatting(domain: string): { isTyposquat: boolean; targetBrand
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const rawUrl = String(body.url || "").trim();
+    let rawUrl = String(body.url || "").trim();
 
     if (!rawUrl) {
       return NextResponse.json({ detail: "URL cannot be empty." }, { status: 400 });
     }
 
+    // Smart URL extraction: if user entered multiple URLs or text with spaces (e.g., "https://site1.com or https://site2.com")
+    const match = rawUrl.match(/https?:\/\/[^\s<>"]+/i);
+    if (match) {
+      rawUrl = match[0];
+    } else if (rawUrl.includes(" ")) {
+      rawUrl = rawUrl.split(/\s+/)[0];
+    }
+
     const hasScheme = /^https?:\/\//i.test(rawUrl);
-    const parsedUrl = new URL(hasScheme ? rawUrl : `http://${rawUrl}`);
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(hasScheme ? rawUrl : `http://${rawUrl}`);
+    } catch {
+      return NextResponse.json(
+        { detail: "Invalid URL format. Please enter a single valid web URL (e.g., https://example.com)." },
+        { status: 400 }
+      );
+    }
     const domain = parsedUrl.hostname.toLowerCase().replace(/^www\./, "");
     const path = parsedUrl.pathname;
     const query = parsedUrl.search.replace(/^\?/, "");

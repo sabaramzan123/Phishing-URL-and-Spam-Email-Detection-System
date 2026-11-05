@@ -219,10 +219,13 @@ export default function Home() {
       setEmailResult(data);
       setApiOnline(true);
       setActiveResultTab("overview");
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.warn("Email analysis notice:", err);
-      setEmailError("Backend service offline or unreachable. Please verify server.py is running on port 8000.");
-      setApiOnline(false);
+      const msg = err?.message || "Failed to analyze email content.";
+      setEmailError(msg);
+      if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+        setApiOnline(false);
+      }
     } finally {
       setEmailLoading(false);
     }
@@ -253,10 +256,13 @@ export default function Home() {
       setUrlResult(data);
       setApiOnline(true);
       setActiveResultTab("overview");
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.warn("URL analysis notice:", err);
-      setUrlError("Backend service offline or unreachable. Please verify server.py is running on port 8000.");
-      setApiOnline(false);
+      const msg = err?.message || "Failed to analyze target URL.";
+      setUrlError(msg);
+      if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+        setApiOnline(false);
+      }
     } finally {
       setUrlLoading(false);
     }
