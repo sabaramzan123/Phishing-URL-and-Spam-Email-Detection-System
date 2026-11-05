@@ -24,3 +24,4 @@ Dockerfile text eol=lf
 *.pkl binary
 *.joblib binary
 *.ico binary
+
