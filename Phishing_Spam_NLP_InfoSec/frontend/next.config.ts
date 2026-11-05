@@ -1,18 +1,18 @@
 import type { NextConfig } from "next";
 
-const backendUrl =
-  process.env.BACKEND_API_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://127.0.0.1:8000";
-
 const nextConfig: NextConfig = {
   async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: `${backendUrl}/api/:path*`,
-      },
-    ];
+    // If an external backend URL is explicitly configured, proxy requests to it
+    if (process.env.BACKEND_API_URL) {
+      return [
+        {
+          source: "/api/:path*",
+          destination: `${process.env.BACKEND_API_URL}/api/:path*`,
+        },
+      ];
+    }
+    // Otherwise, route natively to Next.js API Route Handlers in src/app/api
+    return [];
   },
 };
 
