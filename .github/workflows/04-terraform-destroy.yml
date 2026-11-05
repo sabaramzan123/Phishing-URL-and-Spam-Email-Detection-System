@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: terraform
+        working-directory: terraform/environments/prod
 
     steps:
       - name: "Validate User Confirmation"
@@ -69,3 +69,4 @@ jobs:
           echo "### 🛑 Infrastructure Teardown Complete" >> $GITHUB_STEP_SUMMARY
           echo "All AWS resources (VPC, Subnets, ALB, ECS, ECR) have been terminated." >> $GITHUB_STEP_SUMMARY
           echo "**Project AWS Cost: \$0.00**" >> $GITHUB_STEP_SUMMARY
+

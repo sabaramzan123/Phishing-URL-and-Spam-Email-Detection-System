@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: terraform
+        working-directory: terraform/environments/prod
 
     steps:
       - name: "Checkout Source Code"
@@ -64,3 +64,4 @@ jobs:
           echo "=========================================================="
           echo "### 🚀 Deployment Successful!" >> $GITHUB_STEP_SUMMARY
           echo "**Application URL:** [http://$ALB_URL](http://$ALB_URL)" >> $GITHUB_STEP_SUMMARY
+

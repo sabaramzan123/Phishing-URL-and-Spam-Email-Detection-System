@@ -1,19 +1,19 @@
 variable "aws_region" {
-  description = "AWS region for deploying cloud infrastructure"
+  description = "AWS region for resources"
   type        = string
   default     = "us-east-1"
 }
 
 variable "app_name" {
-  description = "Application name prefix used across AWS resources"
+  description = "Application name prefix"
   type        = string
   default     = "phishguard"
 }
 
 variable "environment" {
-  description = "Deployment environment name"
+  description = "Deployment environment"
   type        = string
-  default     = "dev"
+  default     = "prod"
 }
 
 variable "vpc_cidr" {
@@ -23,37 +23,43 @@ variable "vpc_cidr" {
 }
 
 variable "public_subnet_1_cidr" {
-  description = "CIDR block for public subnet in AZ 1"
+  description = "CIDR block for public subnet 1"
   type        = string
   default     = "10.0.1.0/24"
 }
 
 variable "public_subnet_2_cidr" {
-  description = "CIDR block for public subnet in AZ 2"
+  description = "CIDR block for public subnet 2"
   type        = string
   default     = "10.0.2.0/24"
 }
 
 variable "az_1" {
-  description = "First Availability Zone for ALB redundancy"
+  description = "First Availability Zone"
   type        = string
   default     = "us-east-1a"
 }
 
 variable "az_2" {
-  description = "Second Availability Zone for ALB redundancy"
+  description = "Second Availability Zone"
   type        = string
   default     = "us-east-1b"
 }
 
 variable "backend_port" {
-  description = "Port on which FastAPI backend listens"
+  description = "Container port for FastAPI backend"
   type        = number
   default     = 8000
 }
 
 variable "frontend_port" {
-  description = "Port on which Next.js frontend listens"
+  description = "Container port for Next.js frontend"
   type        = number
   default     = 3000
+}
+
+variable "enable_fargate_spot" {
+  description = "Enable Fargate Spot capacity provider for 70% cost reduction"
+  type        = bool
+  default     = true
 }
