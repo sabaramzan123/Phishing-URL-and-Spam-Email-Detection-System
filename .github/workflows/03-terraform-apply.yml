@@ -1,0 +1,66 @@
+name: "03 - Terraform Deploy Infrastructure (AWS)"
+
+# ==============================================================================
+# Workflow 3: Automated Cloud Infrastructure Provisioning
+# ------------------------------------------------------------------------------
+# Triggers on:
+#   1. Manual execution via workflow_dispatch (Recommended for safety)
+#   2. Push to main branch when terraform/ directory changes
+#
+# Resources Provisioned:
+#   - AWS VPC with Multi-AZ Public Subnets, IGW, and Route Tables
+#   - AWS ECR Repositories (Backend & Frontend)
+#   - AWS Application Load Balancer (ALB) with Path-Based Routing
+#   - AWS ECS Fargate Cluster & Microservices
+# ==============================================================================
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "terraform/**"
+      - ".github/workflows/03-terraform-apply.yml"
+
+jobs:
+  terraform-apply:
+    name: "Terraform Plan & Apply"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - name: "Checkout Source Code"
+        uses: actions/checkout@v4
+
+      - name: "Configure AWS Credentials"
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+
+      - name: "Setup Terraform CLI"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+
+      - name: "Initialize Terraform with S3 Remote Backend"
+        run: terraform init
+
+      - name: "Terraform Plan (Preview Infrastructure Changes)"
+        run: terraform plan -out=tfplan
+
+      - name: "Terraform Apply (Provision AWS Infrastructure)"
+        run: terraform apply -auto-approve tfplan
+
+      - name: "Display Application URL"
+        run: |
+          ALB_URL=$(terraform output -raw alb_dns_name)
+          echo "=========================================================="
+          echo "Infrastructure deployed successfully!"
+          echo "Application Load Balancer URL: http://$ALB_URL"
+          echo "=========================================================="
+          echo "### 🚀 Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "**Application URL:** [http://$ALB_URL](http://$ALB_URL)" >> $GITHUB_STEP_SUMMARY

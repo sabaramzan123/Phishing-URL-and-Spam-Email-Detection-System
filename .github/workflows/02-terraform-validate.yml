@@ -1,0 +1,63 @@
+name: "02 - Terraform Lint & Validate"
+
+# ==============================================================================
+# Workflow 2: Terraform IaC Code Quality & Validation
+# ------------------------------------------------------------------------------
+# Triggers on:
+#   1. Push to main branch when terraform/ files change
+#   2. Pull requests to main branch when terraform/ files change
+#   3. Manual trigger via workflow_dispatch
+#
+# Steps Performed:
+#   - terraform fmt: Checks formatting consistency
+#   - terraform init -backend=false: Initializes providers without AWS credentials
+#   - terraform validate: Checks syntax, schema, and attribute validity
+#   - trivy config: Scans IaC files for cloud security misconfigurations
+# ==============================================================================
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "terraform/**"
+      - ".github/workflows/02-terraform-validate.yml"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "terraform/**"
+  workflow_dispatch:
+
+jobs:
+  terraform-validate:
+    name: "Terraform Lint & Validate"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - name: "Checkout Source Code"
+        uses: actions/checkout@v4
+
+      - name: "Setup Terraform CLI"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+
+      - name: "Check Terraform Code Formatting"
+        run: terraform fmt -check
+
+      - name: "Initialize Terraform (Local/Offline Mode)"
+        run: terraform init -backend=false
+
+      - name: "Validate Terraform Syntax & Schema"
+        run: terraform validate
+
+      - name: "Scan Terraform for IaC Security Misconfigurations"
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "config"
+          scan-dir: "terraform"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0" # Informative scan, won't block pipeline on warnings

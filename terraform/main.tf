@@ -7,6 +7,12 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "s3" {
+    bucket = "phishguard-tfstate-562825149788"
+    key    = "state/terraform.tfstate"
+    region = "us-east-1"
+  }
 }
 
 # ------------------------------------------------------------------------------
