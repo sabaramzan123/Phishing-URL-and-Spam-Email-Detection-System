@@ -26,22 +26,28 @@ jobs:
   terraform-destroy:
     name: "Terraform Destroy"
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: terraform/environments/prod
 
     steps:
+      # ------------------------------------------------------------------------
+      # 1. Checkout Source Code First
+      # ------------------------------------------------------------------------
+      - name: "Checkout Source Code"
+        uses: actions/checkout@v4
+
+      # ------------------------------------------------------------------------
+      # 2. Validate Safety Confirmation
+      # ------------------------------------------------------------------------
       - name: "Validate User Confirmation"
         run: |
           if [ "${{ github.event.inputs.confirmation }}" != "destroy" ]; then
             echo "❌ Confirmation failed. You must type 'destroy' to run this workflow."
             exit 1
           fi
-          echo "✅ Confirmation verified. Proceeding with infrastructure teardown..."
+          echo "✅ Confirmation verified: '${{ github.event.inputs.confirmation }}'. Proceeding with teardown..."
 
-      - name: "Checkout Source Code"
-        uses: actions/checkout@v4
-
+      # ------------------------------------------------------------------------
+      # 3. Configure AWS Credentials
+      # ------------------------------------------------------------------------
       - name: "Configure AWS Credentials"
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -49,17 +55,31 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
 
+      # ------------------------------------------------------------------------
+      # 4. Setup Terraform CLI
+      # ------------------------------------------------------------------------
       - name: "Setup Terraform CLI"
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.7.0"
 
+      # ------------------------------------------------------------------------
+      # 5. Initialize Terraform with S3 Remote Backend
+      # ------------------------------------------------------------------------
       - name: "Initialize Terraform with S3 Remote Backend"
+        working-directory: terraform/environments/prod
         run: terraform init
 
+      # ------------------------------------------------------------------------
+      # 6. Destroy Infrastructure
+      # ------------------------------------------------------------------------
       - name: "Terraform Destroy (Delete All AWS Resources)"
+        working-directory: terraform/environments/prod
         run: terraform destroy -auto-approve
 
+      # ------------------------------------------------------------------------
+      # 7. Summary
+      # ------------------------------------------------------------------------
       - name: "Tear-down Complete"
         run: |
           echo "=========================================================="
@@ -69,4 +89,3 @@ jobs:
           echo "### 🛑 Infrastructure Teardown Complete" >> $GITHUB_STEP_SUMMARY
           echo "All AWS resources (VPC, Subnets, ALB, ECS, ECR) have been terminated." >> $GITHUB_STEP_SUMMARY
           echo "**Project AWS Cost: \$0.00**" >> $GITHUB_STEP_SUMMARY
-

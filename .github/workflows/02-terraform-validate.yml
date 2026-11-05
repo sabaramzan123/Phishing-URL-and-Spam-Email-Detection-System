@@ -9,7 +9,7 @@ name: "02 - Terraform Lint & Validate"
 #   3. Manual trigger via workflow_dispatch
 #
 # Steps Performed:
-#   - terraform fmt: Checks formatting consistency
+#   - terraform fmt: Checks formatting consistency across all modules
 #   - terraform init -backend=false: Initializes providers without AWS credentials
 #   - terraform validate: Checks syntax, schema, and attribute validity
 #   - trivy config: Scans IaC files for cloud security misconfigurations
@@ -31,9 +31,6 @@ jobs:
   terraform-validate:
     name: "Terraform Lint & Validate"
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: terraform/environments/prod
 
     steps:
       - name: "Checkout Source Code"
@@ -45,12 +42,15 @@ jobs:
           terraform_version: "1.7.0"
 
       - name: "Check Terraform Code Formatting"
-        run: terraform fmt -check
+        working-directory: terraform
+        run: terraform fmt -check -recursive
 
       - name: "Initialize Terraform (Local/Offline Mode)"
+        working-directory: terraform/environments/prod
         run: terraform init -backend=false
 
       - name: "Validate Terraform Syntax & Schema"
+        working-directory: terraform/environments/prod
         run: terraform validate
 
       - name: "Scan Terraform for IaC Security Misconfigurations"
@@ -61,4 +61,3 @@ jobs:
           format: "table"
           severity: "CRITICAL,HIGH"
           exit-code: "0" # Informative scan, won't block pipeline on warnings
-
