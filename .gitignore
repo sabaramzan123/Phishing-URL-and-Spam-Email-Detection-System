@@ -1,0 +1,144 @@
+# =============================================================================
+# Root .gitignore for Phishing URL and Spam Email Detection System
+# Covers FastAPI backend, ML models/datasets, and Next.js frontend
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. Python & Virtual Environments
+# -----------------------------------------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+pyvenv.cfg
+.Python
+
+# -----------------------------------------------------------------------------
+# 2. Python Caches & Bytecode
+# -----------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# -----------------------------------------------------------------------------
+# 3. Node.js & Next.js Frontend
+# -----------------------------------------------------------------------------
+node_modules/
+frontend/node_modules/
+.pnp/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js build outputs
+.next/
+frontend/.next/
+out/
+frontend/out/
+build/
+frontend/build/
+dist/
+.turbo/
+.vercel/
+
+# TypeScript cache
+*.tsbuildinfo
+next-env.d.ts
+frontend/next-env.d.ts
+
+# Package manager debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# -----------------------------------------------------------------------------
+# 4. Large Datasets & Raw Data (Avoid pushing hundreds of MBs to GitHub)
+# -----------------------------------------------------------------------------
+data/
+Phishing_Spam_NLP_InfoSec/data/
+*.csv
+*.tsv
+*.parquet
+*.sqlite3
+*.db
+
+# -----------------------------------------------------------------------------
+# 5. Machine Learning Model Binaries (Large binaries exceed GitHub standard limits)
+# -----------------------------------------------------------------------------
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.onnx
+models/*.pkl
+Phishing_Spam_NLP_InfoSec/models/*.pkl
+
+# Preserve evaluation metrics metadata JSON
+!models/model_metrics.json
+!Phishing_Spam_NLP_InfoSec/models/model_metrics.json
+
+# -----------------------------------------------------------------------------
+# 6. Environment Variables, Secrets & Credentials
+# -----------------------------------------------------------------------------
+.env
+.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.cert
+*.crt
+secrets.json
+
+# -----------------------------------------------------------------------------
+# 7. Operating System & Editor Files
+# -----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# -----------------------------------------------------------------------------
+# 8. Temporary, Log & Cache Files
+# -----------------------------------------------------------------------------
+*.log
+*.tmp
+*.temp
+*.bak
+screenshots/
+screenshot*.png
+verify_*.png
+test_*.png
+

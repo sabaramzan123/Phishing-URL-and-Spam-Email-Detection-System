@@ -1,0 +1,21 @@
+# Phishing URL and Spam Email Detection System - Backend Dependencies
+
+# Web & API Framework
+fastapi>=0.110.0
+uvicorn>=0.28.0
+pydantic>=2.6.0
+python-multipart>=0.0.9
+
+# Machine Learning & Data Processing
+scikit-learn>=1.4.0
+pandas>=2.1.0
+numpy>=1.24.0
+scipy>=1.11.0
+joblib>=1.3.0
+
+# Natural Language Processing
+nltk>=3.8.1
+
+# Optional Interactive UI
+streamlit>=1.30.0
+
