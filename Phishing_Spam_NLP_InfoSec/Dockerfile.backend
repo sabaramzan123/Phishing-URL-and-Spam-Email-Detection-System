@@ -1,4 +1,7 @@
-FROM python:3.11-slim
+# ==============================================================================
+# Stage 1: Builder (Install dependencies & download NLTK datasets)
+# ==============================================================================
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
@@ -6,14 +9,38 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Step 2: Download NLTK datasets for email NLP cleaning
+# Step 2: Download NLTK datasets for email NLP preprocessing
 RUN python -m nltk.downloader stopwords punkt punkt_tab
 
-# Step 3: Copy only necessary backend code and ML models
-COPY server.py .
-COPY src/ ./src/
-COPY models/ ./models/
+# ==============================================================================
+# Stage 2: Runner (Lightweight & Secure Production Container)
+# ==============================================================================
+FROM python:3.11-slim AS runner
 
-# Step 4: Expose FastAPI port and start server
+WORKDIR /app
+
+# Environment configuration
+ENV PYTHONUNBUFFERED=1
+ENV NLTK_DATA=/home/appuser/nltk_data
+
+# Step 3: Security Hardening - Create non-root user (appuser)
+RUN useradd -m -u 1001 appuser
+
+# Step 4: Copy installed Python packages and binaries from builder
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Step 5: Copy NLTK data to appuser's home directory with correct ownership
+COPY --from=builder --chown=appuser:appuser /root/nltk_data /home/appuser/nltk_data
+
+# Step 6: Copy application code and ML models
+COPY --chown=appuser:appuser server.py .
+COPY --chown=appuser:appuser src/ ./src/
+COPY --chown=appuser:appuser models/ ./models/
+
+# Step 7: Switch to non-root user (Prevents root privilege escalation)
+USER appuser
+
 EXPOSE 8000
+
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
