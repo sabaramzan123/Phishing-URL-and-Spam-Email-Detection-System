@@ -4,19 +4,28 @@ import React from "react";
 import { cn } from "@/lib/utils";
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: "neutral" | "accent" | "low" | "medium" | "high" | "critical";
+  variant?: "neutral" | "accent" | "low" | "medium" | "high" | "critical" | "safe" | "suspicious";
   size?: "sm" | "md";
 }
 
-export function Badge({ className, variant = "neutral", size = "sm", children, ...props }: BadgeProps) {
+export function Badge({
+  className,
+  variant = "neutral",
+  size = "sm",
+  children,
+  ...props
+}: BadgeProps) {
   const variantStyles = {
     neutral:
-      "bg-[var(--surface-3)] text-[var(--text-2)] border-[var(--border)]",
+      "bg-[var(--bg-subtle)] text-[var(--text-secondary)] border-[var(--border)]",
     accent:
-      "bg-[var(--accent-subtle)] text-[var(--accent)] border-[var(--accent-border)] font-semibold",
-    low: "bg-[var(--risk-low-bg)] text-[var(--risk-low)] border-[var(--risk-low-border)] font-semibold",
+      "bg-[var(--accent-primary-subtle)] text-[var(--accent-primary)] border-[var(--accent-primary-border)] font-medium",
+    low: "bg-[var(--risk-safe-bg)] text-[var(--risk-safe)] border-[var(--risk-safe-border)] font-semibold",
+    safe: "bg-[var(--risk-safe-bg)] text-[var(--risk-safe)] border-[var(--risk-safe-border)] font-semibold",
     medium:
-      "bg-[var(--risk-med-bg)] text-[var(--risk-med)] border-[var(--risk-med-border)] font-semibold",
+      "bg-[var(--risk-suspicious-bg)] text-[var(--risk-suspicious)] border-[var(--risk-suspicious-border)] font-semibold",
+    suspicious:
+      "bg-[var(--risk-suspicious-bg)] text-[var(--risk-suspicious)] border-[var(--risk-suspicious-border)] font-semibold",
     high: "bg-[var(--risk-high-bg)] text-[var(--risk-high)] border-[var(--risk-high-border)] font-semibold",
     critical:
       "bg-[var(--risk-critical-bg)] text-[var(--risk-critical)] border-[var(--risk-critical-border)] font-semibold",
@@ -30,7 +39,7 @@ export function Badge({ className, variant = "neutral", size = "sm", children, .
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center font-medium rounded-md border tracking-wide uppercase",
+        "inline-flex items-center justify-center font-medium rounded-[4px] border uppercase tracking-wider",
         variantStyles[variant],
         sizeStyles[size],
         className
@@ -41,4 +50,3 @@ export function Badge({ className, variant = "neutral", size = "sm", children, .
     </span>
   );
 }
-

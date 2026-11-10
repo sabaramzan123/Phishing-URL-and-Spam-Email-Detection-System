@@ -2,19 +2,17 @@
 
 import React from "react";
 import {
-  ShieldAlert,
   Clock,
   Key,
-  Link2,
   Globe,
   AlertTriangle,
   Flame,
   ShieldCheck,
-  FileText,
   Lock,
+  Link2,
+  FileText,
 } from "lucide-react";
 import { SeverityChip, type SeverityLevel } from "@/components/ui/SeverityChip";
-import { cn } from "@/lib/utils";
 
 export interface DetectionReasonsProps {
   indicators: string[];
@@ -22,7 +20,7 @@ export interface DetectionReasonsProps {
   isThreat: boolean;
 }
 
-interface ParsedIndicator {
+interface ParsedFinding {
   title: string;
   description: string;
   severity: SeverityLevel;
@@ -34,15 +32,21 @@ export default function DetectionReasons({
   explanation,
   isThreat,
 }: DetectionReasonsProps) {
-  // Helper to parse indicator string into structured, enterprise-grade row
-  const parseIndicator = (raw: string): ParsedIndicator => {
+  // Parse indicator string into structured, academic finding
+  const parseIndicator = (raw: string): ParsedFinding => {
     const lower = raw.toLowerCase();
 
     // 1. Typosquatting / Brand impersonation / Suspicious pattern
-    if (lower.includes("lookalike") || lower.includes("typosquat") || lower.includes("brand impersonation") || lower.includes("suspicious url structure")) {
+    if (
+      lower.includes("lookalike") ||
+      lower.includes("typosquat") ||
+      lower.includes("brand impersonation") ||
+      lower.includes("suspicious url structure")
+    ) {
       return {
-        title: "Deceptive Brand Lookalike / Typosquatting",
-        description: "Domain structurally mimics known consumer brands or uses character substitutions (homoglyphs) to mislead users.",
+        title: "Brand Typosquatting Detected",
+        description:
+          "Target domain structurally mimics recognized consumer brands or employs character substitutions (homoglyphs) to deceive users.",
         severity: "critical",
         icon: <Flame className="w-4 h-4 text-[var(--risk-critical)] shrink-0" />,
       };
@@ -51,175 +55,154 @@ export default function DetectionReasons({
     // 2. Raw IP host
     if (lower.includes("raw ip") || lower.includes("ip address")) {
       return {
-        title: "Raw IP Address Used as Host",
-        description: "URL circumvents standard DNS infrastructure by directly routing to a bare IPv4 host, a tactic used to evade domain reputation filters.",
+        title: "Raw IP Address Used",
+        description:
+          "URL uses a numerical IPv4 address rather than a registered domain name, commonly used to bypass reputation filtering.",
         severity: "critical",
         icon: <Globe className="w-4 h-4 text-[var(--risk-critical)] shrink-0" />,
       };
     }
 
     // 3. Credential harvesting / Login keywords
-    if (lower.includes("credential") || lower.includes("password") || lower.includes("login") || lower.includes("verify your account")) {
+    if (
+      lower.includes("credential") ||
+      lower.includes("password") ||
+      lower.includes("login") ||
+      lower.includes("verify your account")
+    ) {
       return {
-        title: "Authentication / Credential Harvesting Trigger",
-        description: "Message or URL contains high-affinity credential collection targets designed to intercept user session credentials.",
+        title: "Credential Harvesting Trigger",
+        description:
+          "Text or URL contains high-affinity authentication lures designed to prompt immediate credential submission.",
         severity: "high",
         icon: <Key className="w-4 h-4 text-[var(--risk-high)] shrink-0" />,
       };
     }
 
     // 4. Urgent / Pressure manipulation
-    if (lower.includes("urgent") || lower.includes("pressure") || lower.includes("immediate") || lower.includes("pragmatic")) {
+    if (
+      lower.includes("urgent") ||
+      lower.includes("pressure") ||
+      lower.includes("immediate") ||
+      lower.includes("pragmatic")
+    ) {
       return {
-        title: "Psychological Coercion & Artificial Urgency",
-        description: "Linguistic urgency cues (e.g., immediate account suspension threats) intended to bypass rational verification.",
+        title: "Urgent Language Detected",
+        description:
+          "Coercive urgency cues (e.g. immediate account suspension threats) intended to force impulsive user action.",
         severity: "high",
         icon: <Clock className="w-4 h-4 text-[var(--risk-high)] shrink-0" />,
       };
     }
 
-    // 5. Insecure HTTP / No SSL
-    if (lower.includes("insecure") || lower.includes("no ssl")) {
+    // 5. Embedded link threat
+    if (lower.includes("embedded") || lower.includes("hyperlink")) {
+      return {
+        title: "Embedded Malicious Link",
+        description:
+          "Hyperlink embedded inside the email payload was flagged as suspicious upon recursive structural inspection.",
+        severity: "critical",
+        icon: <Link2 className="w-4 h-4 text-[var(--risk-critical)] shrink-0" />,
+      };
+    }
+
+    // 6. Insecure HTTP / No SSL
+    if (lower.includes("insecure") || lower.includes("no ssl") || lower.includes("http)")) {
       return {
         title: "Insecure Cleartext Transport (HTTP)",
-        description: "Connection lacks SSL/TLS transport encryption, exposing transmitted credentials to interception.",
+        description:
+          "Connection lacks TLS encryption, leaving data vulnerable to eavesdropping and interception.",
         severity: "medium",
-        icon: <Lock className="w-4 h-4 text-[var(--risk-med)] shrink-0" />,
+        icon: <Lock className="w-4 h-4 text-[var(--risk-suspicious)] shrink-0" />,
       };
     }
 
-    // 6. Suspicious TLD / Multiple subdomains
+    // 7. Suspicious TLD / Multiple subdomains / Structural
     if (lower.includes("subdomain") || lower.includes("tld") || lower.includes("hyphen")) {
       return {
-        title: "Anomalous Structural Hierarchy",
-        description: "Excessive nesting depth, high hyphen count, or high-risk top-level domain frequently leveraged in burner phishing kits.",
+        title: "Suspicious URL Structure",
+        description:
+          "Anomalous subdomain depth, abnormal hyphenation, or high-risk top-level domain frequently used in phishing campaigns.",
         severity: "medium",
-        icon: <AlertTriangle className="w-4 h-4 text-[var(--risk-med)] shrink-0" />,
+        icon: <AlertTriangle className="w-4 h-4 text-[var(--risk-suspicious)] shrink-0" />,
       };
     }
 
-    // 7. Shortener
-    if (lower.includes("shorten") || lower.includes("shortener")) {
+    // 8. Safe / Benign indicators
+    if (lower.includes("standard") || lower.includes("clean") || lower.includes("official") || lower.includes("safe")) {
       return {
-        title: "URL Shortener Redirection Cloak",
-        description: "Destination obscures true apex destination behind a redirection intermediary.",
-        severity: "medium",
-        icon: <Link2 className="w-4 h-4 text-[var(--risk-med)] shrink-0" />,
+        title: "Standard Web Structure",
+        description: "URL or text conforms to verified legitimate domain and lexical standards.",
+        severity: "safe",
+        icon: <ShieldCheck className="w-4 h-4 text-[var(--risk-safe)] shrink-0" />,
       };
     }
 
-    // 8. HTTPS detected (Benign indicator)
-    if (lower.includes("https detected")) {
-      return {
-        title: "Transport Layer Security (TLS) Present",
-        description: "Valid HTTPS scheme detected. (Note: Many modern phishing sites also utilize free TLS certificates).",
-        severity: "info",
-        icon: <ShieldCheck className="w-4 h-4 text-[var(--accent)] shrink-0" />,
-      };
-    }
-
-    // Fallback negative
-    if (isThreat) {
-      return {
-        title: raw,
-        description: "Statistical trigger exceeding normal baseline distributions for benign content.",
-        severity: "high",
-        icon: <AlertTriangle className="w-4 h-4 text-[var(--risk-high)] shrink-0" />,
-      };
-    }
-
-    // Fallback benign
+    // Fallback: Custom indicator
     return {
-      title: raw,
-      description: "Conforms to authentic structural and linguistic communication standards.",
-      severity: "safe",
-      icon: <ShieldCheck className="w-4 h-4 text-[var(--risk-low)] shrink-0" />,
+      title: raw.split("(")[0]?.trim() || raw,
+      description: raw.includes("(") ? raw.slice(raw.indexOf("(") + 1).replace(")", "") : "Identified during security analysis.",
+      severity: isThreat ? "medium" : "info",
+      icon: <FileText className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />,
     };
   };
 
-  const parsedList = indicators.map(parseIndicator);
-
-  // Sort by severity hierarchy
-  const severityOrder: Record<SeverityLevel, number> = {
-    critical: 0,
-    high: 1,
-    medium: 2,
-    info: 3,
-    safe: 4,
-  };
-
-  parsedList.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+  const findings = indicators.map(parseIndicator);
 
   return (
-    <div className="rounded-2xl p-6 sm:p-7 bg-[var(--surface-2)] border border-[var(--border)] flex flex-col justify-between h-full shadow-lg">
-      <div>
-        {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)]">
-          <div className="flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-[var(--accent)]" />
-            <h3 className="text-base font-semibold text-[var(--text-1)]">
-              {isThreat ? "Why Was This Flagged?" : "Security Analysis Findings"}
-            </h3>
-          </div>
-
-          <span className="text-xs font-mono text-[var(--text-3)] tabular-nums">
-            {parsedList.length} {parsedList.length === 1 ? "indicator" : "indicators"}
-          </span>
+    <div className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-[10px] p-4 sm:p-6 shadow-[var(--shadow-card)] transition-colors duration-180">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-3 sm:pb-3.5 mb-3 sm:mb-4 border-b border-[var(--border-subtle)] gap-2">
+        <div>
+          <h3 className="text-[15px] sm:text-[16px] font-semibold text-[var(--text-primary)]">
+            Detection Findings
+          </h3>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5 leading-normal">
+            Key indicators and security signals identified by the classifier.
+          </p>
         </div>
+        <span className="text-xs font-mono px-2 py-0.5 rounded-[5px] bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border)] shrink-0">
+          {findings.length} {findings.length === 1 ? "signal" : "signals"}
+        </span>
+      </div>
 
-        {/* Severity-Ordered Indicator Rows */}
-        <div className="mt-5 space-y-3 max-h-[380px] overflow-y-auto pr-1">
-          {parsedList.length > 0 ? (
-            parsedList.map((item, idx) => (
-              <div
-                key={idx}
-                className={cn(
-                  "p-3.5 rounded-xl border transition-colors flex items-start gap-3.5",
-                  item.severity === "critical"
-                    ? "bg-[var(--risk-critical-bg)] border-[var(--risk-critical-border)]"
-                    : item.severity === "high"
-                    ? "bg-[var(--risk-high-bg)] border-[var(--risk-high-border)]"
-                    : item.severity === "medium"
-                    ? "bg-[var(--risk-med-bg)] border-[var(--risk-med-border)]"
-                    : item.severity === "safe"
-                    ? "bg-[var(--risk-low-bg)] border-[var(--risk-low-border)]"
-                    : "bg-[var(--surface-3)] border-[var(--border)]"
-                )}
-              >
-                <div className="mt-0.5">{item.icon}</div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="text-[13px] sm:text-sm font-semibold text-[var(--text-1)] leading-tight">
-                      {item.title}
-                    </span>
-                    <SeverityChip severity={item.severity} />
+      {/* Findings List */}
+      {findings.length === 0 ? (
+        <div className="py-6 px-4 rounded-[8px] bg-[var(--bg-subtle)] border border-[var(--border)] text-center">
+          <ShieldCheck className="w-5 h-5 text-[var(--risk-safe)] mx-auto mb-1.5" />
+          <p className="text-sm font-medium text-[var(--text-primary)]">
+            No Malicious Indicators Detected
+          </p>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+            Input exhibits standard patterns with no high-risk keywords or structural anomalies.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          {findings.map((f, idx) => (
+            <div
+              key={idx}
+              className="p-3 rounded-[8px] bg-[var(--bg-input)] border border-[var(--border)] flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 sm:gap-3 transition-colors duration-180 hover:bg-[var(--bg-subtle)]"
+            >
+              <div className="flex items-start gap-2.5 min-w-0">
+                <div className="mt-0.5 shrink-0">{f.icon}</div>
+                <div className="min-w-0">
+                  <div className="text-[13px] sm:text-[14px] font-medium text-[var(--text-primary)] leading-tight">
+                    {f.title}
                   </div>
-                  <p className="text-xs sm:text-[13px] text-[var(--text-2)] mt-1.5 leading-normal">
-                    {item.description}
+                  <p className="text-xs text-[var(--text-secondary)] mt-1 leading-normal break-words">
+                    {f.description}
                   </p>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="p-5 rounded-xl bg-[var(--risk-low-bg)] border border-[var(--risk-low-border)] text-xs sm:text-sm text-[var(--risk-low)] flex items-center gap-3">
-              <ShieldCheck className="w-5 h-5 shrink-0" />
-              <span>No malicious or suspicious indicators detected. Message adheres to legitimate communication standards.</span>
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* Technical Context Bar */}
-      <div className="mt-5 pt-4 border-t border-[var(--border-subtle)] flex items-center justify-between text-xs text-[var(--text-3)]">
-        <div className="flex items-center gap-1.5 font-mono text-[11px]">
-          <FileText className="w-3.5 h-3.5 text-[var(--text-3)] shrink-0" />
-          <span>Multivariate Security Assessment</span>
+              <div className="shrink-0 self-start sm:self-auto pl-6 sm:pl-0">
+                <SeverityChip severity={f.severity} />
+              </div>
+            </div>
+          ))}
         </div>
-        <span className="text-[11px] font-mono text-[var(--text-3)]">
-          {indicators.length === 0 ? "Zero Threat Signatures" : `${indicators.length} Active Finding${indicators.length > 1 ? "s" : ""}`}
-        </span>
-      </div>
+      )}
     </div>
   );
 }

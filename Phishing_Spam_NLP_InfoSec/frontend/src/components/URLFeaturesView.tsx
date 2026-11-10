@@ -1,17 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import {
-  Globe,
-  Lock,
-  Unlock,
-  AlertTriangle,
-  CheckCircle2,
-  Sliders,
-  ExternalLink,
-  ShieldCheck,
-  Flame,
-} from "lucide-react";
+import { Sliders, AlertTriangle, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface URLFeaturesViewProps {
@@ -19,353 +9,370 @@ export interface URLFeaturesViewProps {
   features: Record<string, number>;
 }
 
+interface FeatureRow {
+  key: string;
+  name: string;
+  value: string | number;
+  description: string;
+  isTriggered: boolean;
+  statusLabel: string;
+}
+
 export default function URLFeaturesView({ url, features }: URLFeaturesViewProps) {
-  // Parse URL components to highlight suspicious tokens
-  const urlBreakdown = useMemo(() => {
+  // Breakdown target URL components for research clarity
+  const parsed = useMemo(() => {
     try {
       const hasScheme = url.toLowerCase().startsWith("http://") || url.toLowerCase().startsWith("https://");
-      const urlObj = new URL(hasScheme ? url : `http://${url}`);
+      const obj = new URL(hasScheme ? url : `http://${url}`);
       return {
-        protocol: urlObj.protocol.replace(":", ""),
-        host: urlObj.hostname,
-        pathname: urlObj.pathname,
-        search: urlObj.search,
-        hasSSL: urlObj.protocol === "https:",
+        protocol: obj.protocol.replace(":", ""),
+        host: obj.hostname,
+        pathname: obj.pathname || "/",
+        search: obj.search || "none",
       };
     } catch {
       return {
         protocol: url.startsWith("https") ? "https" : "http",
         host: url,
-        pathname: "",
-        search: "",
-        hasSSL: url.startsWith("https"),
+        pathname: "/",
+        search: "none",
       };
     }
   }, [url]);
 
-  // Feature definitions with description, threshold, and threat impact
-  const featureDefinitions: Array<{
-    key: string;
-    label: string;
-    description: string;
-    isTriggered: (val: number) => boolean;
-    formatValue: (val: number) => string;
-  }> = [
-    {
-      key: "suspicious_patterns",
-      label: "Typosquatting & Threat Patterns",
-      description: "Detects brand homoglyphs, character swaps (e.g. paypa1), and double slash exploits.",
-      isTriggered: (v) => v === 1,
-      formatValue: (v) => (v === 1 ? "1 (Detected)" : "0 (Clean)"),
-    },
-    {
-      key: "has_ip",
-      label: "Raw IPv4 Host Address",
-      description: "Checks if domain resolves to a numerical IP instead of a verified registered domain.",
-      isTriggered: (v) => v === 1,
-      formatValue: (v) => (v === 1 ? "1 (Host IP)" : "0 (DNS Name)"),
-    },
-    {
-      key: "https",
-      label: "TLS / HTTPS Protocol",
-      description: "Checks whether transport is secured with valid TLS encryption (0 = Unencrypted HTTP).",
-      isTriggered: (v) => v === 0,
-      formatValue: (v) => (v === 1 ? "1 (HTTPS)" : "0 (HTTP No SSL)"),
-    },
-    {
-      key: "has_at",
-      label: "@ Obfuscation Delimiter",
-      description: "Authority token delimiter used to deceive users regarding the genuine apex host.",
-      isTriggered: (v) => v === 1,
-      formatValue: (v) => (v === 1 ? "1 (Present)" : "0 (Clean)"),
-    },
-    {
-      key: "is_shortener",
-      label: "URL Shortener Redirection",
-      description: "Detects shortening services (bit.ly, tinyurl, etc.) masking true destination.",
-      isTriggered: (v) => v === 1,
-      formatValue: (v) => (v === 1 ? "1 (Shortener)" : "0 (Direct)"),
-    },
-    {
-      key: "login_keyword",
-      label: "Login Trigger Keyword",
-      description: "Matches authentication keywords: 'login', 'signin', 'log-in'.",
-      isTriggered: (v) => v === 1,
-      formatValue: (v) => (v === 1 ? "1 (Found)" : "0 (None)"),
-    },
-    {
-      key: "verify_keyword",
-      label: "Verify Trigger Keyword",
-      description: "Matches verification keywords: 'verify', 'verification', 'confirm'.",
-      isTriggered: (v) => v === 1,
-      formatValue: (v) => (v === 1 ? "1 (Found)" : "0 (None)"),
-    },
-    {
-      key: "password_keyword",
-      label: "Password Keyword",
-      description: "Matches credential keywords: 'password', 'passcode', 'credential'.",
-      isTriggered: (v) => v === 1,
-      formatValue: (v) => (v === 1 ? "1 (Found)" : "0 (None)"),
-    },
-    {
-      key: "account_keyword",
-      label: "Account Keyword",
-      description: "Matches user profile keywords: 'account', 'profile', 'membership'.",
-      isTriggered: (v) => v === 1,
-      formatValue: (v) => (v === 1 ? "1 (Found)" : "0 (None)"),
-    },
-    {
-      key: "secure_keyword",
-      label: "Security Keyword",
-      description: "Matches pseudo-trust keywords: 'secure', 'security', 'protect'.",
-      isTriggered: (v) => v === 1,
-      formatValue: (v) => (v === 1 ? "1 (Found)" : "0 (None)"),
-    },
-    {
-      key: "num_subdomains",
-      label: "Subdomain Nesting Depth",
-      description: "Depth of subdomains under apex (threshold: >=2 levels).",
-      isTriggered: (v) => v >= 2,
-      formatValue: (v) => `${v} levels`,
-    },
-    {
-      key: "url_length",
-      label: "Total URL Character Length",
-      description: "Overall character count (threshold: >75 characters).",
-      isTriggered: (v) => v > 75,
-      formatValue: (v) => `${v} chars`,
-    },
-    {
-      key: "domain_length",
-      label: "Apex Domain Length",
-      description: "Length of domain host string (threshold: >28 characters).",
-      isTriggered: (v) => v > 28,
-      formatValue: (v) => `${v} chars`,
-    },
-    {
-      key: "num_dots",
-      label: "Period (.) Delimiter Count",
-      description: "Count of dots in URL string (threshold: >=4 dots).",
-      isTriggered: (v) => v >= 4,
-      formatValue: (v) => `${v} dots`,
-    },
-    {
-      key: "num_hyphens",
-      label: "Hyphen (-) Count",
-      description: "Count of hyphens commonly used to mimic brand names (threshold: >=3).",
-      isTriggered: (v) => v >= 3,
-      formatValue: (v) => `${v} hyphens`,
-    },
-    {
-      key: "num_special_chars",
-      label: "Special Characters Count",
-      description: "Density of special characters (?=&%_-~+#@:; threshold: >=6).",
-      isTriggered: (v) => v >= 6,
-      formatValue: (v) => `${v} chars`,
-    },
-    {
-      key: "num_digits",
-      label: "Numerical Digits Count",
-      description: "Count of numerical digits in URL string (threshold: >=5).",
-      isTriggered: (v) => v >= 5,
-      formatValue: (v) => `${v} digits`,
-    },
-    {
-      key: "num_slashes",
-      label: "Path Slashes Count",
-      description: "Directory hierarchy depth (threshold: >=5 slashes).",
-      isTriggered: (v) => v >= 5,
-      formatValue: (v) => `${v} slashes`,
-    },
-    {
-      key: "query_length",
-      label: "Query Parameter Length",
-      description: "Character length of HTTP GET parameters following '?' (threshold: >40).",
-      isTriggered: (v) => v > 40,
-      formatValue: (v) => `${v} chars`,
-    },
-  ];
+  // Map 19 features with exact definitions, values, descriptions and triggered checks
+  const rows: FeatureRow[] = useMemo(() => {
+    const getVal = (keys: string[], defaultVal = 0): number => {
+      for (const k of keys) {
+        if (features[k] !== undefined) return features[k];
+      }
+      return defaultVal;
+    };
+
+    const definitions = [
+      {
+        key: "suspicious_patterns",
+        name: "Brand Typosquatting & Homoglyphs",
+        valKeys: ["suspicious_patterns", "typosquatting"],
+        description: "Checks for brand lookalikes (e.g. paypa1, micros0ft) and deceptive character swaps.",
+        isTriggered: (v: number) => v === 1,
+        format: (v: number) => (v === 1 ? "Detected (1)" : "Clean (0)"),
+      },
+      {
+        key: "use_of_ip",
+        name: "Raw IPv4 Host Address",
+        valKeys: ["use_of_ip", "has_ip"],
+        description: "Checks if the host is a raw numerical IP address rather than a verified domain.",
+        isTriggered: (v: number) => v === 1,
+        format: (v: number) => (v === 1 ? "Raw IP (1)" : "Domain (0)"),
+      },
+      {
+        key: "short_url",
+        name: "URL Shortener Redirection",
+        valKeys: ["short_url", "is_shortener"],
+        description: "Detects URL redirection services (e.g. bit.ly, tinyurl) used to conceal true destination.",
+        isTriggered: (v: number) => v === 1,
+        format: (v: number) => (v === 1 ? "Shortener (1)" : "Standard (0)"),
+      },
+      {
+        key: "https",
+        name: "TLS / HTTPS Protocol",
+        valKeys: ["https", "count_https"],
+        description: "Verifies encrypted transport security (0 indicates cleartext HTTP connection).",
+        isTriggered: (v: number) => v === 0,
+        format: (v: number) => (v === 1 ? "HTTPS (1)" : "HTTP No SSL (0)"),
+      },
+      {
+        key: "url_length",
+        name: "Total URL Length",
+        valKeys: ["url_length"],
+        description: "Total character count; URLs > 75 characters are statistically correlated with lures.",
+        isTriggered: (v: number) => v > 75,
+        format: (v: number) => `${v} chars`,
+      },
+      {
+        key: "hostname_length",
+        name: "Hostname Length",
+        valKeys: ["hostname_length"],
+        description: "Character count of the domain; excessive length indicates synthetic subdomains.",
+        isTriggered: (v: number) => v > 30,
+        format: (v: number) => `${v} chars`,
+      },
+      {
+        key: "path_length",
+        name: "Path Hierarchy Length",
+        valKeys: ["path_length"],
+        description: "Character count of resource path following domain authority.",
+        isTriggered: (v: number) => v > 50,
+        format: (v: number) => `${v} chars`,
+      },
+      {
+        key: "fd_length",
+        name: "First Directory Length",
+        valKeys: ["fd_length"],
+        description: "Length of the primary directory immediately succeeding the hostname.",
+        isTriggered: (v: number) => v > 20,
+        format: (v: number) => `${v} chars`,
+      },
+      {
+        key: "tld_length",
+        name: "Top-Level Domain Length",
+        valKeys: ["tld_length"],
+        description: "Length of the extension suffix (e.g. .com, .accountants).",
+        isTriggered: (v: number) => v > 5,
+        format: (v: number) => `${v} chars`,
+      },
+      {
+        key: "count_dots",
+        name: "Period (.) Count",
+        valKeys: ["count_dots", "dots"],
+        description: "Total dots; counts >= 3 indicate deep subdomain nesting or deceptive routing.",
+        isTriggered: (v: number) => v >= 3,
+        format: (v: number) => `${v}`,
+      },
+      {
+        key: "count_hyphens",
+        name: "Hyphen (-) Count",
+        valKeys: ["count_hyphens", "hyphens"],
+        description: "Hyphens used to synthesize brand lookalikes (e.g. paypal-verify-login).",
+        isTriggered: (v: number) => v >= 2,
+        format: (v: number) => `${v}`,
+      },
+      {
+        key: "count_at",
+        name: "@ Delimiter Count",
+        valKeys: ["count_at", "has_at"],
+        description: "The @ symbol instructs browsers to treat preceding characters as authentication info.",
+        isTriggered: (v: number) => v >= 1,
+        format: (v: number) => `${v}`,
+      },
+      {
+        key: "count_question",
+        name: "Question Mark (?) Count",
+        valKeys: ["count_question"],
+        description: "Query string delimiter count; multiple occurrences indicate parameter pollution.",
+        isTriggered: (v: number) => v >= 2,
+        format: (v: number) => `${v}`,
+      },
+      {
+        key: "count_percent",
+        name: "Percent (%) Symbol Count",
+        valKeys: ["count_percent"],
+        description: "URL hex encoding operator frequently utilized for character obfuscation.",
+        isTriggered: (v: number) => v >= 1,
+        format: (v: number) => `${v}`,
+      },
+      {
+        key: "count_equal",
+        name: "Equal Sign (=) Count",
+        valKeys: ["count_equal"],
+        description: "Parameter assignment count; high counts accompany tracking and session tokens.",
+        isTriggered: (v: number) => v >= 3,
+        format: (v: number) => `${v}`,
+      },
+      {
+        key: "count_dir",
+        name: "Directory Slash (/) Depth",
+        valKeys: ["count_dir"],
+        description: "Total directory traversal depth; values >= 4 represent nested resource trees.",
+        isTriggered: (v: number) => v >= 4,
+        format: (v: number) => `${v} levels`,
+      },
+      {
+        key: "count_digits",
+        name: "Numeric Digit Count",
+        valKeys: ["count_digits"],
+        description: "Total integer digits across URL; attackers use digits for dynamic ID evasion.",
+        isTriggered: (v: number) => v > 15,
+        format: (v: number) => `${v}`,
+      },
+      {
+        key: "count_letters",
+        name: "Alphabet Character Count",
+        valKeys: ["count_letters"],
+        description: "Total alphabetical characters throughout the URL string.",
+        isTriggered: (v: number) => v > 80,
+        format: (v: number) => `${v}`,
+      },
+      {
+        key: "entropy",
+        name: "Shannon Domain Entropy",
+        valKeys: ["entropy", "domain_entropy"],
+        description: "Measures domain randomness; values >= 4.0 indicate algorithmic generation (DGA).",
+        isTriggered: (v: number) => v >= 4.0,
+        format: (v: number) => `${Number(v).toFixed(2)} bits`,
+      },
+    ];
+
+    return definitions.map((def) => {
+      const rawVal = getVal(def.valKeys);
+      const triggered = def.isTriggered(rawVal);
+      return {
+        key: def.key,
+        name: def.name,
+        value: def.format(rawVal),
+        description: def.description,
+        isTriggered: triggered,
+        statusLabel: triggered ? "Triggered" : "Normal",
+      };
+    });
+  }, [features]);
+
+  const triggeredCount = rows.filter((r) => r.isTriggered).length;
 
   return (
-    <div className="space-y-6">
-      {/* 1. URL Syntactic RFC 3986 Breakdown Card */}
-      <div className="p-5 rounded-xl bg-[var(--surface-3)] border border-[var(--border)] shadow-[var(--shadow-sm)]">
-        <div className="flex items-center justify-between mb-3 text-xs text-[var(--text-3)] font-medium">
-          <span className="flex items-center gap-1.5 text-[var(--text-1)] font-semibold">
-            <Globe className="w-4 h-4 text-[var(--accent)]" />
-            <span>URL Syntactic RFC 3986 Structural Breakdown</span>
-          </span>
-          <span className="font-mono">{url.length} total characters</span>
+    <div className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-[10px] p-4 sm:p-6 shadow-[var(--shadow-card)] space-y-4 transition-colors duration-180">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 sm:pb-3.5 border-b border-[var(--border-subtle)] gap-2">
+        <div>
+          <div className="flex items-center gap-2">
+            <Sliders className="w-4 h-4 text-[var(--accent-primary)] shrink-0" />
+            <h3 className="text-[15px] sm:text-[16px] font-semibold text-[var(--text-primary)]">
+              URL Lexical &amp; Structural Feature Matrix
+            </h3>
+          </div>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5 leading-normal">
+            Quantitative lexical indicators evaluated by the Random Forest classifier (19 security features).
+          </p>
         </div>
 
-        {/* Visual Token Stream */}
-        <div className="p-3.5 rounded-lg bg-[var(--surface-input)] border border-[var(--border-strong)] font-mono text-xs break-all flex flex-wrap items-center gap-1.5 leading-relaxed">
-          {/* Protocol */}
+        <div className="flex items-center gap-2 text-xs shrink-0">
+          <span className="text-[var(--text-secondary)] font-medium">Diagnostic Status:</span>
           <span
             className={cn(
-              "px-2 py-0.5 rounded font-semibold",
-              urlBreakdown.hasSSL
-                ? "bg-[var(--risk-low-bg)] text-[var(--risk-low)] border border-[var(--risk-low-border)]"
-                : "bg-[var(--risk-critical-bg)] text-[var(--risk-critical)] border border-[var(--risk-critical-border)]"
+              "px-2.5 py-0.5 rounded-[5px] font-mono text-xs font-semibold border",
+              triggeredCount > 0
+                ? "bg-[var(--risk-high-bg)] border-[var(--risk-high-border)] text-[var(--risk-high)]"
+                : "bg-[var(--risk-safe-bg)] border-[var(--risk-safe-border)] text-[var(--risk-safe)]"
             )}
-            title={urlBreakdown.hasSSL ? "Encrypted HTTPS Scheme" : "Unencrypted Insecure HTTP Scheme"}
           >
-            {urlBreakdown.protocol}://
+            {triggeredCount} of {rows.length} Triggered
           </span>
-
-          {/* Host */}
-          <span
-            className={cn(
-              "px-2 py-0.5 rounded font-semibold",
-              features.suspicious_patterns === 1 || features.has_ip === 1
-                ? "bg-[var(--risk-critical-bg)] text-[var(--risk-critical)] border border-[var(--risk-critical-border)]"
-                : "text-[var(--text-1)]"
-            )}
-            title="Registered Host / Apex Domain"
-          >
-            {urlBreakdown.host}
-          </span>
-
-          {/* Path */}
-          {urlBreakdown.pathname && (
-            <span
-              className={cn(
-                "px-1.5 py-0.5 rounded",
-                features.login_keyword === 1 || features.verify_keyword === 1 || features.password_keyword === 1
-                  ? "bg-[var(--risk-med-bg)] text-[var(--risk-med)] border border-[var(--risk-med-border)]"
-                  : "text-[var(--text-2)]"
-              )}
-              title="Path Directory Hierarchy"
-            >
-              {urlBreakdown.pathname}
-            </span>
-          )}
-
-          {/* Query */}
-          {urlBreakdown.search && (
-            <span
-              className={cn(
-                "px-1.5 py-0.5 rounded",
-                urlBreakdown.search.length > 40
-                  ? "bg-[var(--risk-med-bg)] text-[var(--risk-med)] border border-[var(--risk-med-border)]"
-                  : "text-[var(--text-3)]"
-              )}
-              title="HTTP Query Parameters"
-            >
-              {urlBreakdown.search}
-            </span>
-          )}
-        </div>
-
-        {/* Structural Indicators Summary */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 pt-3 border-t border-[var(--border-subtle)] text-[11px] font-mono">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[var(--text-3)]">Protocol:</span>
-            <span className={urlBreakdown.hasSSL ? "text-[var(--risk-low)]" : "text-[var(--risk-critical)]"}>
-              {urlBreakdown.protocol.toUpperCase()}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[var(--text-3)]">IP Host:</span>
-            <span className={features.has_ip === 1 ? "text-[var(--risk-critical)]" : "text-[var(--risk-low)]"}>
-              {features.has_ip === 1 ? "Yes (Raw IP)" : "No (DNS)"}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[var(--text-3)]">Shortener:</span>
-            <span className={features.is_shortener === 1 ? "text-[var(--risk-med)]" : "text-[var(--risk-low)]"}>
-              {features.is_shortener === 1 ? "Yes (Cloaked)" : "No (Direct)"}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[var(--text-3)]">Typosquat:</span>
-            <span className={features.suspicious_patterns === 1 ? "text-[var(--risk-critical)]" : "text-[var(--risk-low)]"}>
-              {features.suspicious_patterns === 1 ? "Flagged" : "Clean"}
-            </span>
-          </div>
         </div>
       </div>
 
-      {/* 2. Structured 19-Feature Table (Feature Name | Extracted Value | Description | Status) */}
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-input)] overflow-hidden shadow-[var(--shadow-sm)]">
-        <div className="px-5 py-3.5 bg-[var(--surface-2)] border-b border-[var(--border)] flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-[var(--accent)]" />
-            <h4 className="text-xs font-semibold text-[var(--text-1)] uppercase tracking-wider">
-              19 Lexical Security Parameters Evaluated by Random Forest
-            </h4>
-          </div>
-          <span className="text-xs font-mono text-[var(--text-3)]">
-            19 Features
+      {/* Target URL Structure Breakdown */}
+      <div className="p-3 rounded-[8px] bg-[var(--bg-subtle)] border border-[var(--border)] grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs font-mono">
+        <div>
+          <span className="text-[10px] sm:text-[11px] text-[var(--text-muted)] block uppercase">Protocol</span>
+          <span className="font-semibold text-[var(--text-primary)] uppercase">
+            {parsed.protocol}
           </span>
         </div>
+        <div className="sm:col-span-2">
+          <span className="text-[10px] sm:text-[11px] text-[var(--text-muted)] block uppercase">Hostname</span>
+          <span className="font-semibold text-[var(--text-primary)] truncate block" title={parsed.host}>
+            {parsed.host}
+          </span>
+        </div>
+        <div>
+          <span className="text-[10px] sm:text-[11px] text-[var(--text-muted)] block uppercase">Resource Path</span>
+          <span className="text-[var(--text-secondary)] truncate block" title={parsed.pathname}>
+            {parsed.pathname}
+          </span>
+        </div>
+      </div>
 
+      {/* MOBILE VIEW (< 640px): Stacked Feature Cards for Zero Horizontal Page Scroll */}
+      <div className="block sm:hidden space-y-2">
+        {rows.map((row) => (
+          <div
+            key={row.key}
+            className={cn(
+              "p-3 rounded-[8px] border transition-colors duration-180 space-y-1.5",
+              row.isTriggered
+                ? "bg-[var(--risk-high-bg)]/30 border-[var(--risk-high-border)]"
+                : "bg-[var(--bg-input)] border-[var(--border)]"
+            )}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-1.5 font-medium text-[13px] text-[var(--text-primary)]">
+                {row.isTriggered ? (
+                  <AlertTriangle className="w-3.5 h-3.5 text-[var(--risk-high)] shrink-0" />
+                ) : (
+                  <ShieldCheck className="w-3.5 h-3.5 text-[var(--risk-safe)] shrink-0" />
+                )}
+                <span>{row.name}</span>
+              </div>
+              <span
+                className={cn(
+                  "px-2 py-0.5 rounded-[4px] font-mono text-[10px] font-semibold border shrink-0",
+                  row.isTriggered
+                    ? "bg-[var(--risk-high-bg)] text-[var(--risk-high)] border-[var(--risk-high-border)]"
+                    : "bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border)]"
+                )}
+              >
+                {row.statusLabel}
+              </span>
+            </div>
+
+            <div className="flex items-baseline justify-between text-xs pt-0.5">
+              <span className="text-[11px] text-[var(--text-muted)]">Extracted Value:</span>
+              <span className="font-mono font-semibold text-[var(--text-primary)] tabular-nums">
+                {row.value}
+              </span>
+            </div>
+
+            <p className="text-[11px] text-[var(--text-secondary)] leading-normal pt-0.5 border-t border-[var(--border-subtle)]">
+              {row.description}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* DESKTOP & TABLET VIEW (>= 640px): Responsive Table */}
+      <div className="hidden sm:block border border-[var(--border)] rounded-[8px] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-[var(--border)] bg-[var(--surface-3)] text-[var(--text-3)] uppercase tracking-wider font-semibold text-[10px]">
-                <th className="py-2.5 px-4">Feature Name</th>
-                <th className="py-2.5 px-4">Extracted Value</th>
-                <th className="py-2.5 px-4">Description</th>
-                <th className="py-2.5 px-4 text-right">Status</th>
+              <tr className="bg-[var(--bg-subtle)] border-b border-[var(--border)] text-[var(--text-secondary)] font-medium">
+                <th className="py-2.5 px-3 w-[28%]">Feature</th>
+                <th className="py-2.5 px-3 w-[16%]">Extracted Value</th>
+                <th className="py-2.5 px-3 w-[42%]">Description &amp; Security Relevance</th>
+                <th className="py-2.5 px-3 w-[14%] text-right">Detection Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border-subtle)] font-mono">
-              {featureDefinitions.map((feat) => {
-                const rawVal = features[feat.key] ?? 0;
-                const triggered = feat.isTriggered(rawVal);
-
-                return (
-                  <tr
-                    key={feat.key}
-                    className={cn(
-                      "transition-colors",
-                      triggered
-                        ? "bg-[var(--risk-critical-bg)]/40 hover:bg-[var(--risk-critical-bg)]/60"
-                        : "hover:bg-[var(--surface-2)]/60"
-                    )}
-                  >
-                    {/* Feature Name */}
-                    <td className="py-3 px-4 font-semibold text-[var(--text-1)] font-sans">
-                      {feat.label}
-                    </td>
-
-                    {/* Extracted Value */}
-                    <td className="py-3 px-4 tabular-nums">
-                      <span
-                        className={cn(
-                          "px-2 py-0.5 rounded text-[11px] font-semibold",
-                          triggered
-                            ? "bg-[var(--risk-critical-bg)] text-[var(--risk-critical)] border border-[var(--risk-critical-border)]"
-                            : "bg-[var(--surface-3)] text-[var(--text-1)] border border-[var(--border)]"
-                        )}
-                      >
-                        {feat.formatValue(rawVal)}
-                      </span>
-                    </td>
-
-                    {/* Description */}
-                    <td className="py-3 px-4 text-[var(--text-2)] font-sans text-[11px] leading-relaxed max-w-md">
-                      {feat.description}
-                    </td>
-
-                    {/* Status */}
-                    <td className="py-3 px-4 text-right">
-                      {triggered ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[var(--risk-critical)] text-white shadow-sm">
-                          <Flame className="w-3 h-3" />
-                          <span>TRIGGERED</span>
-                        </span>
+            <tbody className="divide-y divide-[var(--border-subtle)]">
+              {rows.map((row) => (
+                <tr
+                  key={row.key}
+                  className={cn(
+                    "transition-colors duration-180",
+                    row.isTriggered
+                      ? "bg-[var(--risk-high-bg)]/40 hover:bg-[var(--risk-high-bg)]/60"
+                      : "hover:bg-[var(--bg-subtle)]"
+                  )}
+                >
+                  <td className="py-2.5 px-3 font-medium text-[var(--text-primary)]">
+                    <div className="flex items-center gap-1.5">
+                      {row.isTriggered ? (
+                        <AlertTriangle className="w-3.5 h-3.5 text-[var(--risk-high)] shrink-0" />
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-[var(--surface-3)] text-[var(--text-3)] border border-[var(--border)]">
-                          <CheckCircle2 className="w-3 h-3 text-[var(--risk-low)]" />
-                          <span>NORMAL</span>
-                        </span>
+                        <ShieldCheck className="w-3.5 h-3.5 text-[var(--risk-safe)] shrink-0" />
                       )}
-                    </td>
-                  </tr>
-                );
-              })}
+                      <span>{row.name}</span>
+                    </div>
+                  </td>
+                  <td className="py-2.5 px-3 font-mono font-medium text-[var(--text-primary)] tabular-nums">
+                    {row.value}
+                  </td>
+                  <td className="py-2.5 px-3 text-[var(--text-secondary)] leading-relaxed">
+                    {row.description}
+                  </td>
+                  <td className="py-2.5 px-3 text-right">
+                    <span
+                      className={cn(
+                        "inline-block px-2 py-0.5 rounded-[4px] font-mono text-[11px] font-semibold border",
+                        row.isTriggered
+                          ? "bg-[var(--risk-high-bg)] text-[var(--risk-high)] border-[var(--risk-high-border)]"
+                          : "bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border)]"
+                      )}
+                    >
+                      {row.statusLabel}
+                    </span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

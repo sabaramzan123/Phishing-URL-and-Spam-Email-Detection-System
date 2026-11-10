@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Search, AlertTriangle, ShieldCheck, RotateCcw, Link2, CornerDownLeft } from "lucide-react";
+import { Search, RotateCcw, AlertTriangle, ShieldCheck, Link2, CornerDownLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 export interface URLScannerProps {
@@ -25,7 +25,7 @@ export default function URLScanner({
   };
 
   const handleTrySafe = () => {
-    const safeUrl = "https://en.wikipedia.org/wiki/Phishing";
+    const safeUrl = "https://en.wikipedia.org/wiki/Natural_language_processing";
     setUrl(safeUrl);
   };
 
@@ -46,98 +46,95 @@ export default function URLScanner({
   }, [isInputEmpty, loading, onAnalyze]);
 
   return (
-    <div className="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5 sm:p-[28px] shadow-lg">
-      {/* Header Row */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between pb-5 mb-5 border-b border-[var(--border-subtle)] gap-4">
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold text-[var(--text-1)] tracking-tight">
-            Inspect Target URL
-          </h2>
-          <p className="text-[14px] text-[var(--text-2)] leading-normal">
-            19 lexical and structural security features evaluated via Random Forest classifier.
-          </p>
-        </div>
-
-        {/* Quick Example Chips */}
-        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
-          <button
-            type="button"
-            onClick={handleTryPhishing}
-            className="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-medium rounded-lg text-[var(--text-2)] hover:text-[var(--risk-critical)] hover:bg-[var(--risk-critical-bg)] border border-[var(--border)] hover:border-[var(--risk-critical-border)] transition-colors cursor-pointer"
-            title="Populate with typosquatted login link"
-          >
-            <AlertTriangle className="w-3.5 h-3.5 text-[var(--risk-critical)] shrink-0" />
-            <span>Phishing URL</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleTrySafe}
-            className="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-medium rounded-lg text-[var(--text-2)] hover:text-[var(--risk-low)] hover:bg-[var(--risk-low-bg)] border border-[var(--border)] hover:border-[var(--risk-low-border)] transition-colors cursor-pointer"
-            title="Populate with legitimate destination"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-[var(--risk-low)] shrink-0" />
-            <span>Safe URL</span>
-          </button>
-        </div>
+    <div className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-[10px] p-4 sm:p-6 shadow-[var(--shadow-card)] transition-colors duration-180">
+      {/* Header */}
+      <div className="mb-4 sm:mb-5 pb-3 sm:pb-4 border-b border-[var(--border-subtle)]">
+        <h2 className="text-[17px] sm:text-[18px] font-semibold text-[var(--text-primary)]">
+          URL Analysis
+        </h2>
+        <p className="text-[13px] sm:text-[14px] text-[var(--text-secondary)] mt-0.5 leading-normal">
+          Inspect URL structure, lexical characteristics, and suspicious patterns.
+        </p>
       </div>
 
-      {/* URL Input */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label htmlFor="target-url-input" className="block text-[14px] font-medium text-[var(--text-1)]">
-            Target Web URL
-          </label>
-          <span className="text-xs font-mono text-[var(--text-3)] tabular-nums">
-            {url.length} chars
-          </span>
-        </div>
-
-        <div className="relative flex items-center">
-          <div className="absolute left-4 text-[var(--text-3)] pointer-events-none">
-            <Link2 className="w-4 h-4" />
+      {/* URL Input Field */}
+      <div className="space-y-4">
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label
+              htmlFor="target-url-input"
+              className="block text-[13px] sm:text-[14px] font-medium text-[var(--text-primary)]"
+            >
+              Target URL
+            </label>
+            <span className="text-xs font-mono text-[var(--text-muted)] tabular-nums">
+              {url.length} characters
+            </span>
           </div>
-          <input
-            id="target-url-input"
-            type="text"
-            className="w-full h-12 pl-11 pr-4 text-[15px] font-mono bg-[var(--surface-input)] border border-[var(--border)] rounded-xl text-[var(--text-1)] placeholder:text-[var(--text-3)] focus:border-[var(--accent)] focus:outline-none transition-colors"
-            placeholder="https://example.com/login?token=..."
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && url.trim()) {
-                onAnalyze();
-              }
-            }}
-          />
-        </div>
-      </div>
 
-      {/* Action Footer */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-5 mt-6 border-t border-[var(--border-subtle)] gap-4">
-        <div className="flex items-center gap-2 text-xs text-[var(--text-3)]">
-          <span className="hidden sm:inline-flex items-center gap-1.5 font-mono">
-            <kbd className="px-2 py-0.5 rounded bg-[var(--surface-3)] border border-[var(--border)] text-xs text-[var(--text-2)] font-medium">
-              Ctrl
-            </kbd>
-            <span>+</span>
-            <kbd className="px-2 py-0.5 rounded bg-[var(--surface-3)] border border-[var(--border)] text-xs text-[var(--text-2)] font-medium">
-              Enter
-            </kbd>
-            <CornerDownLeft className="w-3.5 h-3.5 inline text-[var(--text-3)]" />
-          </span>
-          <span className="text-[var(--text-3)]">to execute model inference</span>
+          <div className="relative flex items-center">
+            <div className="absolute left-3.5 text-[var(--text-muted)] pointer-events-none">
+              <Link2 className="w-4 h-4" />
+            </div>
+            <input
+              id="target-url-input"
+              type="text"
+              className="w-full h-10 sm:h-11 pl-10 pr-3.5 text-[14px] font-mono bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:bg-[var(--bg-card)] focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary-focus)] focus:outline-none transition-all duration-180 ease-in-out"
+              placeholder="https://example.com/path?query=param"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Quick Sample Examples */}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <span className="text-xs text-[var(--text-muted)] mr-0.5">Load sample:</span>
           <Button
             type="button"
-            variant="ghost"
+            variant="sample"
+            size="sm"
+            onClick={handleTryPhishing}
+            icon={<AlertTriangle className="w-3.5 h-3.5 text-[var(--risk-high)]" />}
+          >
+            Phishing URL Example
+          </Button>
+
+          <Button
+            type="button"
+            variant="sample"
+            size="sm"
+            onClick={handleTrySafe}
+            icon={<ShieldCheck className="w-3.5 h-3.5 text-[var(--risk-safe)]" />}
+          >
+            Safe URL Example
+          </Button>
+        </div>
+      </div>
+
+      {/* Form Action Buttons */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 mt-5 border-t border-[var(--border-subtle)]">
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+          <kbd className="px-1.5 py-0.5 rounded-[5px] bg-[var(--bg-subtle)] border border-[var(--border)] font-mono text-[11px] text-[var(--text-secondary)]">
+            Ctrl
+          </kbd>
+          <span>+</span>
+          <kbd className="px-1.5 py-0.5 rounded-[5px] bg-[var(--bg-subtle)] border border-[var(--border)] font-mono text-[11px] text-[var(--text-secondary)]">
+            Enter
+          </kbd>
+          <CornerDownLeft className="w-3.5 h-3.5 text-[var(--text-muted)] inline ml-0.5" />
+          <span className="ml-1">to analyze</span>
+        </div>
+
+        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+          <Button
+            type="button"
+            variant="secondary"
             size="md"
             onClick={onClear}
             disabled={isInputEmpty || loading}
-            icon={<RotateCcw className="w-4 h-4" />}
-            className="h-11 px-4 text-sm"
+            icon={<RotateCcw className="w-3.5 h-3.5" />}
+            className="flex-1 sm:flex-initial h-11 sm:h-10"
           >
             Clear
           </Button>
@@ -149,10 +146,10 @@ export default function URLScanner({
             onClick={() => onAnalyze()}
             disabled={isInputEmpty}
             loading={loading}
-            icon={<Search className="w-4 h-4" />}
-            className="h-11 px-6 text-sm"
+            icon={<Search className="w-3.5 h-3.5" />}
+            className="flex-2 sm:flex-initial h-11 sm:h-10 min-w-[140px]"
           >
-            {loading ? "Analyzing URL..." : "Analyze URL"}
+            {loading ? "Analyzing..." : "Analyze URL"}
           </Button>
         </div>
       </div>

@@ -1,195 +1,199 @@
 @import "tailwindcss";
 
 /* ========================================================================= */
-/* ENTERPRISE DESIGN SYSTEM TOKENS - PHISHGUARD                               */
-/* CrowdStrike / Linear / Vercel Cybersecurity Dashboard                      */
+/* PHISHGUARD — ACADEMIC NLP & RESEARCH DESIGN SYSTEM                         */
+/* Clean, light, minimal, readable typography & restrained color tokens      */
 /* ========================================================================= */
 
 :root {
-  /* Dark Theme (Default Enterprise Palette) */
-  --surface-1: #090D16;       /* Main canvas background */
-  --surface-2: #151C2B;       /* Card background */
-  --surface-3: #1C2638;       /* Elevated surface / nested elements */
-  --surface-input: #111827;   /* Sunken input fields */
-  --surface-overlay: rgba(21, 28, 43, 0.88);
-
-  /* Borders */
-  --border: #273449;          /* Standard card/divider border */
-  --border-subtle: rgba(39, 52, 73, 0.6);
-  --border-strong: #3D4F6E;   /* Focus/active borders */
+  /* Surface & Background Colors */
+  --bg-main: #F5F7F6;            /* Main application canvas */
+  --bg-card: #FFFFFF;            /* Cards and primary white containers */
+  --bg-input: #FAFBFA;           /* Form inputs and textareas */
+  --bg-subtle: #EDF2EF;          /* Secondary panels, pills, and headers */
+  --bg-muted: #E2EAE6;           /* Hover states on subtle elements */
 
   /* Text & Typography */
-  --text-1: #F8FAFC;          /* Primary high-contrast text */
-  --text-2: #94A3B8;          /* Secondary descriptive text */
-  --text-3: #64748B;          /* Muted metadata / labels */
-  --text-inverted: #090D16;
+  --text-primary: #172B3A;       /* Primary text / headings */
+  --text-secondary: #61717B;     /* Descriptive copy & secondary info */
+  --text-muted: #8595A0;         /* Metadata, hints, disabled text */
+  --text-inverse: #FFFFFF;
 
-  /* Brand Accent */
-  --accent: #4F46E5;          /* Refined Indigo */
-  --accent-hover: #4338CA;
-  --accent-subtle: rgba(79, 70, 229, 0.12);
-  --accent-border: rgba(79, 70, 229, 0.35);
+  /* Accent Colors */
+  --accent-primary: #176B60;     /* Primary action teal */
+  --accent-primary-hover: #12564D;
+  --accent-primary-active: #0E453E;
+  --accent-primary-subtle: rgba(23, 107, 96, 0.08);
+  --accent-primary-border: rgba(23, 107, 96, 0.22);
+  --accent-primary-focus: rgba(23, 107, 96, 0.25);
 
-  /* Security Status / 4-Tier Risk Model */
-  --risk-low: #10B981;        /* Safe / Low Risk */
-  --risk-low-bg: rgba(16, 185, 129, 0.10);
-  --risk-low-border: rgba(16, 185, 129, 0.28);
+  --accent-secondary: #477B9E;   /* Secondary slate blue */
+  --accent-secondary-subtle: rgba(71, 123, 158, 0.08);
+  --accent-secondary-border: rgba(71, 123, 158, 0.22);
 
-  --risk-med: #F59E0B;        /* Medium Risk */
-  --risk-med-bg: rgba(245, 158, 11, 0.10);
-  --risk-med-border: rgba(245, 158, 11, 0.28);
+  /* Border Tokens */
+  --border: #DCE4E1;             /* Primary subtle border */
+  --border-subtle: #E8EFECE8;    /* Dividers and light lines */
+  --border-hover: #B8C9C1;       /* Hover state borders */
+  --border-strong: #BDCBC6;      /* Active element borders */
+  --border-focus: #176B60;       /* Focus outline */
 
-  --risk-high: #F97316;       /* High Risk */
-  --risk-high-bg: rgba(249, 115, 22, 0.10);
-  --risk-high-border: rgba(249, 115, 22, 0.28);
+  /* 4-Tier Risk Semantic Colors */
+  --risk-safe: #15803D;          /* Safe (<30%) */
+  --risk-safe-bg: #EAF7EE;
+  --risk-safe-border: #B7E4C4;
 
-  --risk-critical: #EF4444;   /* Critical Risk */
-  --risk-critical-bg: rgba(239, 68, 68, 0.10);
-  --risk-critical-border: rgba(239, 68, 68, 0.32);
+  --risk-suspicious: #B7791F;    /* Suspicious (30-59%) */
+  --risk-suspicious-bg: #FEF7EA;
+  --risk-suspicious-border: #F3DCB1;
+
+  --risk-high: #C65D32;          /* High Risk (60-84%) */
+  --risk-high-bg: #FCF1EC;
+  --risk-high-border: #F4CBB9;
+
+  --risk-critical: #B42318;      /* Critical Risk (>=85%) */
+  --risk-critical-bg: #FDF1F0;
+  --risk-critical-border: #F7C5C2;
+
+  /* Backward Compatibility Semantic Tokens */
+  --surface-1: var(--bg-main);
+  --surface-2: var(--bg-card);
+  --surface-3: var(--bg-subtle);
+  --surface-input: var(--bg-input);
+  --text-1: var(--text-primary);
+  --text-2: var(--text-secondary);
+  --text-3: var(--text-muted);
+  --accent: var(--accent-primary);
+  --accent-hover: var(--accent-primary-hover);
+  --accent-subtle: var(--accent-primary-subtle);
+  --accent-border: var(--accent-primary-border);
+  --risk-low: var(--risk-safe);
+  --risk-low-bg: var(--risk-safe-bg);
+  --risk-low-border: var(--risk-safe-border);
+  --risk-med: var(--risk-suspicious);
+  --risk-med-bg: var(--risk-suspicious-bg);
+  --risk-med-border: var(--risk-suspicious-border);
+
+  /* Radii Scale */
+  --radius-card: 10px;
+  --radius-input: 8px;
+  --radius-button: 9px;
+  --radius-pill: 9999px;
 
   /* Typography */
-  --font-heading: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Elevation Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 14px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 14px 30px -6px rgba(0, 0, 0, 0.65), 0 4px 10px -3px rgba(0, 0, 0, 0.4);
+  /* Restrained Minimal Shadows */
+  --shadow-sm: 0 1px 2px rgba(23, 43, 58, 0.04);
+  --shadow-card: 0 1px 3px rgba(23, 43, 58, 0.05), 0 1px 2px rgba(23, 43, 58, 0.03);
+  --shadow-btn-hover: 0 2px 5px rgba(23, 107, 96, 0.16);
+  --shadow-secondary-hover: 0 2px 4px rgba(23, 43, 58, 0.06);
 }
-
-/* ========================================================================= */
-/* LIGHT THEME TOKENS                                                        */
-/* ========================================================================= */
-
-[data-theme="light"] {
-  --surface-1: #F8FAFC;       /* Main canvas background */
-  --surface-2: #FFFFFF;       /* Card background */
-  --surface-3: #F1F5F9;       /* Secondary surface */
-  --surface-input: #FFFFFF;   /* Clean input background */
-  --surface-overlay: rgba(255, 255, 255, 0.94);
-
-  --border: #E2E8F0;          /* Subtle gray border */
-  --border-subtle: #F1F5F9;
-  --border-strong: #CBD5E1;
-
-  --text-1: #0F172A;          /* Deep navy text */
-  --text-2: #64748B;          /* Mid-tone slate */
-  --text-3: #94A3B8;          /* Muted metadata */
-  --text-inverted: #FFFFFF;
-
-  --accent: #4F46E5;
-  --accent-hover: #4338CA;
-  --accent-subtle: rgba(79, 70, 229, 0.08);
-  --accent-border: rgba(79, 70, 229, 0.25);
-
-  --risk-low: #059669;
-  --risk-low-bg: rgba(5, 150, 105, 0.08);
-  --risk-low-border: rgba(5, 150, 105, 0.22);
-
-  --risk-med: #D97706;
-  --risk-med-bg: rgba(217, 119, 6, 0.08);
-  --risk-med-border: rgba(217, 119, 6, 0.22);
-
-  --risk-high: #EA580C;
-  --risk-high-bg: rgba(234, 88, 12, 0.08);
-  --risk-high-border: rgba(234, 88, 12, 0.22);
-
-  --risk-critical: #DC2626;
-  --risk-critical-bg: rgba(220, 38, 38, 0.08);
-  --risk-critical-border: rgba(220, 38, 38, 0.24);
-
-  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 14px 26px -6px rgba(15, 23, 42, 0.12), 0 4px 8px -3px rgba(15, 23, 42, 0.06);
-}
-
-/* ========================================================================= */
-/* BASE RESETS & FULL-WIDTH BALANCED CONTAINER                               */
-/* ========================================================================= */
 
 @layer base {
   *, ::after, ::before {
     box-sizing: border-box;
   }
 
-  html, body {
+  html {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  body {
     min-height: 100vh;
     width: 100%;
-    background-color: var(--surface-1);
-    color: var(--text-1);
-    font-family: var(--font-body);
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
     font-size: 15px;
-    line-height: 1.55;
+    line-height: 1.5;
     letter-spacing: -0.011em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-heading);
-    letter-spacing: -0.025em;
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
     font-weight: 600;
-    line-height: 1.2;
-    color: var(--text-1);
+    line-height: 1.25;
+    margin: 0;
   }
 
-  code, kbd, samp, pre {
+  p {
+    margin: 0;
+    color: var(--text-secondary);
+  }
+
+  code, pre, kbd {
     font-family: var(--font-mono);
   }
 }
 
-/* Very subtle organic mesh at <=3% opacity */
-body {
-  background-image: 
-    radial-gradient(ellipse at 30% 0%, rgba(79, 70, 229, 0.035) 0%, transparent 60%),
-    radial-gradient(ellipse at 75% 15%, rgba(14, 165, 233, 0.025) 0%, transparent 50%);
-  background-attachment: fixed;
-}
-
-[data-theme="light"] body {
-  background-image: 
-    radial-gradient(ellipse at 30% 0%, rgba(79, 70, 229, 0.03) 0%, transparent 60%),
-    radial-gradient(ellipse at 75% 15%, rgba(14, 165, 233, 0.02) 0%, transparent 50%);
-}
-
-/* Properly centered, full-width responsive container (Max 1200px per spec) */
+/* Centered application container with 1100px max width and responsive padding */
 .app-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1100px;
   margin-inline: auto;
-  padding-inline: 24px;
+  padding-inline: 16px;
 }
 
+@media (min-width: 640px) {
+  .app-container {
+    padding-inline: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-container {
+    padding-inline: 32px;
+  }
+}
+
+/* Accessible and clean focus states */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Interactive element transition default */
+.transition-smooth {
+  transition: all 180ms ease-in-out;
+}
+
+/* Tabular figures for alignment in numbers and statistics */
 .tabular-nums {
   font-feature-settings: 'tnum' 1;
   font-variant-numeric: tabular-nums;
 }
 
-/* Accessible focus outline */
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+/* Custom scrollbar for token tables and diff boxes */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-/* Shimmer animation for skeleton loaders */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+::-webkit-scrollbar-track {
+  background: var(--bg-subtle);
 }
 
-.skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--surface-2) 0%,
-    var(--surface-3) 50%,
-    var(--surface-2) 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.8s infinite;
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
 }
 
-/* Respect user motion preferences */
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Respect user's motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
