@@ -18,11 +18,15 @@ from sklearn.metrics import (
     roc_auc_score, precision_score, recall_score, f1_score
 )
 
-URL_MODEL_PATH = "models/url_model.pkl"
-EMAIL_MODEL_PATH = "models/email_model.pkl"
-URL_DATA_PATH = "data/processed/urls_processed.csv"
-EMAIL_DATA_PATH = "data/processed/emails_processed.csv"
-SUMMARY_OUTPUT_PATH = "models/academic_evaluation_report.txt"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+URL_MODEL_PATH = os.path.join(BASE_DIR, "models", "url_model.pkl")
+EMAIL_MODEL_PATH = os.path.join(BASE_DIR, "models", "email_model.pkl")
+URL_DATA_19 = os.path.join(BASE_DIR, "data", "processed", "urls_processed_19feat.csv")
+URL_DATA_LEGACY = os.path.join(BASE_DIR, "data", "processed", "urls_processed.csv")
+URL_DATA_PATH = URL_DATA_19 if os.path.exists(URL_DATA_19) else URL_DATA_LEGACY
+EMAIL_DATA_PATH = os.path.join(BASE_DIR, "data", "processed", "emails_processed.csv")
+SUMMARY_OUTPUT_PATH = os.path.join(BASE_DIR, "models", "academic_evaluation_report.txt")
+os.makedirs(os.path.dirname(SUMMARY_OUTPUT_PATH), exist_ok=True)
 
 def evaluate_url_model():
     print("\n" + "="*50)

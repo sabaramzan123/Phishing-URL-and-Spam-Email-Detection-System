@@ -257,7 +257,7 @@ def get_email_full_nlp_pipeline(subject: str, body: str, email_model=None, cache
     linguistics = get_linguistic_analysis(body, subject)
     ambiguities = get_ambiguity_spotter(prep_data["cleaned_tokens"])
 
-    # Stage 1: Text Acquisition (Slide 6)
+    # Stage 1: Text Acquisition 
     stage1 = {
         "stage_id": 1,
         "stage_name": "1. Text Acquisition",
@@ -271,7 +271,7 @@ def get_email_full_nlp_pipeline(subject: str, body: str, email_model=None, cache
         }
     }
 
-    # Stage 2: Text Preprocessing (Slide 6 & Slide 15)
+    # Stage 2: Text Preprocessing 
     stage2 = {
         "stage_id": 2,
         "stage_name": "2. Text Preprocessing",
@@ -282,7 +282,7 @@ def get_email_full_nlp_pipeline(subject: str, body: str, email_model=None, cache
         "stemmed_tokens": prep_data["stemmed_tokens"][:25]
     }
 
-    # Stage 3: Feature Extraction (Slide 6)
+    # Stage 3: Feature Extraction 
     # Simple word counting & keyword presence
     word_freq = {}
     for w in prep_data["cleaned_tokens"]:
@@ -298,7 +298,7 @@ def get_email_full_nlp_pipeline(subject: str, body: str, email_model=None, cache
         "feature_summary": f"Converted document into {len(sorted_freq)} unique word features."
     }
 
-    # Stage 4: Modeling (Slide 6)
+    # Stage 4: Modeling
     spam_prob = 0.5
     cleaned_doc = preprocess_email_nlp(subject, body)
     if email_model:

@@ -1,0 +1,77 @@
+=====================================================
+CYBERSECURITY & NLP COURSE PROJECT: ACADEMIC EVALUATION REPORT
+=====================================================
+
+--- URL Security Model Performance (Held-out Test Split: 20%) ---
+Total Test Samples: 12506 (Benign: 6630, Phishing: 5876)
+Accuracy:  90.85%
+Precision: 88.76%
+Recall:    92.21%
+F1-Score:  90.45%
+ROC-AUC:   0.9716
+False Positive Rate (FPR - False Alarms): 10.35%
+False Negative Rate (FNR - Missed Attacks): 7.79%
+
+--- Confusion Matrix ---
+  TN: 5944   | FP: 686    (False Alarms)
+  FN: 458    | TP: 5418   (Detected Attacks)
+
+--- Classification Report ---
+              precision    recall  f1-score   support
+
+           0     0.9285    0.8965    0.9122      6630
+           1     0.8876    0.9221    0.9045      5876
+
+    accuracy                         0.9085     12506
+   macro avg     0.9080    0.9093    0.9084     12506
+weighted avg     0.9093    0.9085    0.9086     12506
+
+--- Top Information Security Features (Gini Importance) ---
+  • num_slashes              : 0.1744
+  • https                    : 0.1446
+  • domain_length            : 0.1263
+  • url_length               : 0.1241
+  • num_dots                 : 0.0984
+  • num_digits               : 0.0679
+  • num_hyphens              : 0.0670
+  • num_special_chars        : 0.0661
+
+=====================================================
+
+--- Email NLP Model Performance (Held-out Test Split: 20%) ---
+Total Test Samples: 24949 (Ham: 12394, Spam/Phish: 12555)
+Accuracy:  98.75%
+Precision: 98.52%
+Recall:    99.00%
+F1-Score:  98.76%
+ROC-AUC:   0.9989
+False Positive Rate (FPR - Legitimate Blocked): 1.51%
+False Negative Rate (FNR - Missed Threats):     1.00%
+
+--- Confusion Matrix ---
+  TN: 12207  | FP: 187    (Legitimate Blocked)
+  FN: 126    | TP: 12429  (Threats Caught)
+
+--- Classification Report ---
+              precision    recall  f1-score   support
+
+           0     0.9898    0.9849    0.9873     12394
+           1     0.9852    0.9900    0.9876     12555
+
+    accuracy                         0.9875     24949
+   macro avg     0.9875    0.9874    0.9875     24949
+weighted avg     0.9875    0.9875    0.9875     24949
+
+
+=====================================================
+ACADEMIC DISCUSSION NOTES FOR PROJECT DEFENSE:
+1. Tradeoff Between False Positives (FPR) and False Negatives (FNR):
+   - In production security, a high FPR degrades user trust and can block critical
+     business emails. Security analysts tune decision thresholds to minimize FPR.
+2. N-Gram Context in TF-IDF:
+   - Using (1, 3) n-grams allows the model to capture multi-word social engineering
+     cues (e.g. 'verify account', 'wire transfer') rather than isolated unigrams.
+3. Why ML Alone is Insufficient (Defense-in-Depth):
+   - Phishing attacks that bypass TF-IDF (e.g. clean spear-phishing text) can be
+     caught by embedded URL inspection and email authentication headers (SPF/DKIM).
+=====================================================
