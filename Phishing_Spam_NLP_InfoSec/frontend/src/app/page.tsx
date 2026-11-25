@@ -87,25 +87,44 @@ export interface URLAnalysisResult {
 
 const getApiBaseCandidates = () => {
   if (typeof window !== "undefined") {
-    return ["", "http://127.0.0.1:8000", "http://localhost:8000"];
+    return [
+      "http://127.0.0.1:8001",
+      "http://localhost:8001",
+      "",
+      "http://127.0.0.1:8000",
+      "http://localhost:8000"
+    ];
   }
-  return ["http://127.0.0.1:8000", "http://localhost:8000"];
+  return [
+    "http://127.0.0.1:8001",
+    "http://localhost:8001",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000"
+  ];
 };
 
 async function fetchFromApi(path: string, options: RequestInit = {}): Promise<Response> {
   const candidates = getApiBaseCandidates();
   let lastError: unknown = null;
+  let lastRes: Response | null = null;
 
   for (const base of candidates) {
     try {
       const url = base ? `${base}${path}` : path;
       const res = await fetch(url, options);
-      return res;
+      if (res.ok) {
+        return res;
+      }
+      if (res.status !== 404) {
+        return res;
+      }
+      lastRes = res;
     } catch (e) {
       lastError = e;
     }
   }
-  throw lastError || new Error("Failed to connect to backend on port 8000.");
+  if (lastRes) return lastRes;
+  throw lastError || new Error("Failed to connect to backend on port 8000 or 8001.");
 }
 
 // ==========================================
